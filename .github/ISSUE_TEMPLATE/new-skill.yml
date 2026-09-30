@@ -1,0 +1,57 @@
+name: New skill request
+description: Propose a reusable SkillHub capability without writing code.
+title: "[Skill request] "
+labels: [skill-request]
+body:
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill name
+      placeholder: Analyze collateral dispute
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: What should this skill do?
+      placeholder: Describe the concrete outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: trigger
+    attributes:
+      label: When should someone use it?
+      placeholder: Describe the situations/questions that should trigger it.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: What information does it need?
+      placeholder: Files, IDs, refs, metrics, dates...
+  - type: textarea
+    id: workflow
+    attributes:
+      label: How should it work?
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [engineering, data-analysis, quant-investigation, documentation, production-support]
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Owner/team
+      placeholder: CCR Quant
+    validations:
+      required: true
+  - type: textarea
+    id: executable
+    attributes:
+      label: Existing script/command/API (optional)
+      placeholder: Mention any approved Python/PowerShell/batch command or API this skill should reuse.

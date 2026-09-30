@@ -1,0 +1,126 @@
+id: backtesting
+name: CCR backtesting comparison drilldown
+schema_version: 2
+materiality_profile: materiality
+deal_id_candidates:
+- DealId
+- TradeId
+- DealReference
+- TradeReference
+deal_id_derivation:
+  source_aliases:
+  - AggregationLevel
+  - AggregationLevelName
+  regex: (?:^|/)TRD:([^/]+)
+  output_name: DealId
+  fallback_to_source: true
+filter_dimensions:
+  LegalEntity:
+    aliases:
+    - LegalEntity
+    - LegalEntityName
+    - LegalEntityId
+    use_upstream_filter: true
+  AggregationLevel:
+    aliases:
+    - AggregationLevel
+    - AggregationLevelName
+    - AggregationId
+    use_upstream_filter: false
+    reason: Backtesting aggregation levels contain deal-level TRD identifiers and
+      are not the same aggregation grain as CVAR/GCVAR.
+metrics:
+- name: Mtf00Gap
+  aliases:
+  - Mtf00 Gap
+  - mtf00Gap
+  - Mtf00Gap
+  coverage_group_by_aliases:
+  - Currency (Test)
+  - Currency (Ref)
+  - Currency
+- name: EepeInEurGap
+  aliases:
+  - EepeInEur Gap
+  - EepeInEurGap
+  - eepeInEurGap
+selection:
+  top_k_deals: 100
+notes:
+- Filter the huge backtesting file first by impacted LegalEntity values from upstream
+  CVAR/GCVAR evidence.
+- Derive DealId from the substring after TRD: in AggregationLevel when no explicit
+    DealId column exists.
+- Rank aggregated deal contributions independently per metric; never mix MTF00 and
+  EEPE units.
+known_compare_schema:
+  business_keys:
+  - LegalEntity
+  - AggregationLevel
+  deal_grain: AggregationLevel contains /TRD:<DEAL_ID>
+  ref_test_pairs:
+  - EepeError
+  - EepeRatio
+  - EffectiveMaturity
+  - RiskWeightedExposureFactor
+  - Mtf00
+  - CashFlowType
+  - Currency
+  - Eepe
+  - EepeInEur
+  - Rwa
+  primary_gaps:
+  - Mtf00 Gap
+  - EepeInEur Gap
+  secondary_diagnostics:
+  - Mtf00 Ratio
+  - Eepe Gap
+  - Eepe Ratio
+  - EepeInEur Ratio
+  - Rwa Gap
+  - Rwa Ratio
+  result_flags:
+  - CashFlowType (Result)
+  - Currency (Result)
+diagnostic_numeric_columns:
+- name: Mtf00Ratio
+  aliases:
+  - Mtf00 Ratio
+- name: EepeGap
+  aliases:
+  - Eepe Gap
+- name: EepeRatio
+  aliases:
+  - Eepe Ratio
+- name: EepeInEurRatio
+  aliases:
+  - EepeInEur Ratio
+- name: RwaGap
+  aliases:
+  - Rwa Gap
+- name: RwaRatio
+  aliases:
+  - Rwa Ratio
+diagnostic_columns:
+- EffectiveMaturity (Ref)
+- EffectiveMaturity (Test)
+- RiskWeightedExposureFactor (Ref)
+- RiskWeightedExposureFactor (Test)
+- CashFlowType (Ref)
+- CashFlowType (Test)
+- CashFlowType (Result)
+- Currency (Ref)
+- Currency (Test)
+- Currency (Result)
+- EepeError (Ref)
+- EepeError (Test)
+- EepeRatio (Ref)
+- EepeRatio (Test)
+- Rwa (Ref)
+- Rwa (Test)
+- Rwa Gap
+- Rwa Ratio
+- Mtf00 Ratio
+- Eepe Gap
+- Eepe Ratio
+- EepeInEur Ratio

@@ -1,0 +1,46 @@
+schema_version: 1
+id: release-pr-forensics
+version: 0.2.0
+title: Release PR Forensics
+category: engineering
+subcategory: release-investigation
+owner: Quant Engineering
+status: verified
+executable: true
+tags: [github, pull-request, release, regression, debugging, diff, forensic, commit, date-range]
+aliases: [find culprit pr, release regression, compare releases, suspicious pr, what changed, release impact]
+entrypoints:
+  default: scripts/investigate.py
+  collect: scripts/collect_prs.py
+  inspect: scripts/inspect_pr.py
+  inspect-commit: scripts/inspect_commit.py
+  rank: scripts/rank_candidates.py
+runtime:
+  python: ">=3.10"
+  gh: authenticated
+dependencies:
+  commands: [gh]
+  python: []
+permissions:
+  github: [contents:read, pull_requests:read, metadata:read]
+  filesystem: write-analysis-output
+  production_write: false
+compatibility:
+  github-copilot: full
+  github-copilot-cli: full
+  microsoft-copilot: context-export
+verification:
+  level: verified
+  reviewed_by: Quant Engineering
+  last_reviewed: "2026-09-29"
+  tests_required: true
+exports:
+  compact_context: true
+  default_budget: 6000
+examples:
+  - title: Investigate a release
+    command: python scripts/investigate.py --repo OWNER/REPO --release release/26.10 --query "EEPE jump" --output release-analysis
+  - title: Investigate two commits
+    command: python scripts/investigate.py --repo OWNER/REPO --base GOOD_SHA --head BAD_SHA --query "latency regression" --output release-analysis
+  - title: Investigate a date window
+    command: python scripts/investigate.py --repo OWNER/REPO --from-date 2026-09-15 --to-date 2026-09-22 --base-branch main --query "metric jump" --output release-analysis

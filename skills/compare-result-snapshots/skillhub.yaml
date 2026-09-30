@@ -1,0 +1,37 @@
+schema_version: 1
+id: compare-result-snapshots
+version: 0.1.0
+title: Compare Result Snapshots
+category: data-analysis
+subcategory: regression-analysis
+owner: Quant Engineering
+status: verified
+executable: true
+tags: [csv, regression, metrics, before-after, comparison, data]
+aliases: [compare runs, compare results, metric diff, csv diff, regression output]
+entrypoints:
+  default: scripts/compare_results.py
+runtime:
+  python: ">=3.10"
+dependencies:
+  commands: []
+  python: []
+  note: standard-library-only
+permissions:
+  filesystem: read-input-write-analysis-output
+  network: false
+compatibility:
+  github-copilot: full
+  github-copilot-cli: full
+  microsoft-copilot: context-export
+verification:
+  level: verified
+  reviewed_by: Quant Engineering
+  last_reviewed: "2026-09-29"
+  tests_required: true
+exports:
+  compact_context: true
+  default_budget: 6000
+examples:
+  - title: Compare two CCR snapshots
+    command: python scripts/compare_results.py --before before.csv --after after.csv --keys counterparty,date --metrics EEPE,EPE --output analysis

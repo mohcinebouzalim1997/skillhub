@@ -1,0 +1,7 @@
+schema_version: 1
+id: release-engineering
+name: Release & Regression Engineering
+description: Capabilities for understanding what changed between builds/releases and finding the smallest evidence-backed candidate set.
+icon: material/source-branch
+skills: [release-pr-forensics, compare-result-snapshots, investigate-metric-jump]
+featured: true

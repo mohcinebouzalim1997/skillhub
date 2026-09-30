@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://skillhub.local/schemas/evidence.schema.json",
+  "title": "SkillHub Evidence Contract",
+  "type": "object",
+  "required": ["schema_version", "evidence_type", "source", "summary", "material_impacts", "patterns", "impacted_dimensions", "timings", "warnings"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "evidence_type": {"type": "string"},
+    "title": {"type": "string"},
+    "source": {"type": "object"},
+    "summary": {"type": "object"},
+    "material_impacts": {"type": "array", "items": {"type": "object"}},
+    "patterns": {"type": "array", "items": {"type": "object"}},
+    "impacted_dimensions": {"type": "object"},
+    "timings": {"type": "array", "items": {"type": "object"}},
+    "warnings": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": true
+}

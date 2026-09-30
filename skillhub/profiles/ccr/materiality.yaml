@@ -1,0 +1,25 @@
+id: ccr-release-materiality
+name: CCR release-validation materiality defaults
+schema_version: 1
+threshold_operator: gt
+default_coverage_target: 0.9
+metrics:
+  Mtf00Gap:
+    absolute_threshold: 10000.0
+    coverage_target: 0.9
+    candidate_cap: 5000
+    max_selected: 500
+    unit: native_currency
+  EepeInEurGap:
+    absolute_threshold: 10000.0
+    coverage_target: 0.9
+    candidate_cap: 5000
+    max_selected: 500
+    unit: EUR
+notes:
+- A gap is material only when abs(gap) is strictly greater than 10000.
+- Coverage is applied separately per metric to absolute material movement.
+- The coverage target is configurable per run (for example 0.8 or 0.9).
+- Mtf00Gap is native-currency; when a file contains multiple currencies, coverage/concentration
+  must be computed separately per currency rather than adding EUR and USD amounts.
+- EepeInEurGap is EUR-normalized and can be covered globally.

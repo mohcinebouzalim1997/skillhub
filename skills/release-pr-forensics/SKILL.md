@@ -1,0 +1,235 @@
+---
+name: release-pr-forensics
+description: >
+  Investigate regressions and metric impacts by retrieving the pull requests and direct commits that
+  entered a release, a Git ref/commit interval, or a date window; rank evidence-backed candidate PRs;
+  then inspect selective high-information patches before escalating to full diffs. Use when a release,
+  build, result or metric became bad and you need to identify the code changes worth testing.
+argument-hint: "[repo] [release|base..head|dates] [symptom]"
+---
+
+# Goal
+
+Find the **smallest evidence-backed set of code changes worth investigating** for an observed impact.
+
+This is forensic triage, not causal proof. A highly ranked PR remains a candidate until an experiment,
+revert, bisect, test, or code-level demonstration establishes causality.
+
+# Preconditions
+
+- GitHub CLI `gh` is installed and authenticated for the target repository.
+- The target repository does **not** need to contain this skill and is never modified by the collector.
+- Prefer a concrete symptom: metric name, first bad build/date, affected component, scenario or path.
+
+# Choose the investigation scope
+
+Use **one** of these scopes.
+
+## A. A named release, such as `release/26.10`
+
+When the release has a numeric sibling naming convention, SkillHub can infer the previous release:
+
+```bash
+python scripts/collect_prs.py \
+  --repo "OWNER/REPO" \
+  --release "release/26.10" \
+  --output "release-analysis"
+```
+
+For `release/26.10`, it searches sibling branch/tag refs and chooses the greatest earlier numeric sibling
+(for example `release/26.9`). The chosen baseline is written into `release-index.json`.
+
+For irregular naming, specify it explicitly:
+
+```bash
+python scripts/collect_prs.py \
+  --repo "OWNER/REPO" \
+  --release "release/26.10" \
+  --previous "release/26.9" \
+  --output "release-analysis"
+```
+
+## B. Two refs or commits
+
+Works with branches, tags, release refs, full SHAs or short SHAs resolvable by GitHub:
+
+```bash
+python scripts/collect_prs.py \
+  --repo "OWNER/REPO" \
+  --base "GOOD_REF_OR_COMMIT" \
+  --head "BAD_REF_OR_COMMIT" \
+  --output "release-analysis"
+```
+
+The collector asks GitHub for the commits actually in the interval, maps those commits to associated PRs,
+and preserves direct/unmapped commits instead of silently losing them.
+
+## C. Two dates
+
+To investigate PRs merged during a time window:
+
+```bash
+python scripts/collect_prs.py \
+  --repo "OWNER/REPO" \
+  --from-date "2026-09-15" \
+  --to-date "2026-09-22" \
+  --base-branch "main" \
+  --output "release-analysis"
+```
+
+Date mode selects PRs by GitHub **merge timestamp**. Supplying `--base-branch` additionally scans commits on
+that branch during the interval to surface likely direct/unmapped commits. Commit timestamps and PR merge
+timestamps are not identical concepts; keep that limitation visible in the report.
+
+# Fast path: one-command investigation
+
+When the symptom is already known, use the orchestration script:
+
+```bash
+python scripts/investigate.py \
+  --repo "OWNER/REPO" \
+  --release "release/26.10" \
+  --query "EEPE jumps only for MTF window 1" \
+  --path-hint "MTF" \
+  --first-bad-date "2026-09-22T08:00:00Z" \
+  --inspect-top 3 \
+  --output "release-analysis"
+```
+
+It collects the interval, ranks candidates and performs **smart selective patch inspection** on the top
+candidates. It does not fetch every full diff.
+
+# Progressive-disclosure workflow
+
+## 1. Read the compact index
+
+Always read these first:
+
+- `release-summary.md`
+- `release-index.json`
+
+Do **not** load all diffs into context.
+
+The index contains, for every PR where available:
+
+- number, title and body;
+- author and merge time;
+- labels;
+- changed file names;
+- additions/deletions/churn;
+- commits associated with the interval;
+- base/head branches;
+- URL;
+- direct/unmapped commits.
+
+## 2. Rank against the observed symptom
+
+```bash
+python scripts/rank_candidates.py \
+  --index "release-analysis/release-index.json" \
+  --query "EEPE jump MTF first passage window 1" \
+  --path-hint "MTF" \
+  --first-bad-date "2026-09-22T08:00:00Z" \
+  --output "release-analysis/candidates.json"
+```
+
+Ranking uses deterministic evidence signals such as title/body/label overlap, changed paths, production
+code, config/schema changes, risk-sensitive logic terms, optional date proximity, and penalties for
+low-information docs/test/generated-only changes.
+
+**The score is retrieval relevance, never probability of guilt.**
+
+## 3. Inspect patches selectively
+
+Default to smart inspection:
+
+```bash
+python scripts/inspect_pr.py \
+  --repo "OWNER/REPO" \
+  --pr 1234 \
+  --query "EEPE jump MTF first passage" \
+  --path-hint "MTF" \
+  --diff-mode smart \
+  --output "release-analysis/inspect-1234"
+```
+
+This retrieves GitHub's per-file patch data, scores files, and produces:
+
+- `pr.json` — complete structured PR metadata;
+- `diff-plan.json` — selected/omitted files and reasons;
+- `selected-patches.md` — only the highest-information textual patches within a context budget.
+
+Smart mode normally down-ranks or omits:
+
+- documentation unrelated to the symptom;
+- test-only changes unless testing behavior is relevant;
+- generated/vendor code;
+- lock files;
+- binary files or files for which GitHub returns no textual patch.
+
+It favors production/config code, query/path matches and risk-sensitive logic.
+
+## 4. Escalate to the full diff only when justified
+
+Use a full patch when one of these is true:
+
+- selective patches were truncated;
+- important files have no per-file patch;
+- the mechanism crosses many files and cannot be reconstructed selectively;
+- the candidate remains ambiguous after smart inspection;
+- the user explicitly asks for the complete diff.
+
+```bash
+python scripts/inspect_pr.py \
+  --repo "OWNER/REPO" \
+  --pr 1234 \
+  --diff-mode full \
+  --output "release-analysis/inspect-1234-full"
+```
+
+A full diff is evidence, but it is usually a **poor first context object**.
+
+# Reasoning contract
+
+For each shortlisted PR or direct commit, explicitly separate:
+
+1. **Fact** — what changed, where, and in which PR/commit.
+2. **Relevance** — why that change intersects the observed symptom.
+3. **Hypothesis** — the mechanism by which it could produce the symptom.
+4. **Evidence already present** — data/code facts supporting or contradicting the mechanism.
+5. **Discriminating experiment** — the smallest test that would confirm or reject it.
+
+Never write “PR X caused the regression” merely because it ranks first.
+
+If a direct/unmapped commit is relevant, inspect it with:
+
+```bash
+python scripts/inspect_commit.py --repo "OWNER/REPO" --sha "COMMIT_SHA" --query "<symptom>" --output "release-analysis/commit-COMMIT_SHA"
+```
+
+# High-value signals
+
+Prefer candidates that combine several independent signals:
+
+- changed production code on the affected execution path;
+- changed formula, boundary condition, date logic, state transition, aggregation or calibration;
+- changed configuration/defaults/schema/units/sign conventions/currencies/calendars/interpolation;
+- touched files or symbols whose names overlap the symptom/component;
+- merged before the first bad observation and inside the relevant release window;
+- removed checks or changed fallback/exception behavior;
+- introduced concurrency/cache/serialization changes that can alter runtime behavior.
+
+# Expected output
+
+Produce a concise investigation table with:
+
+- PR / direct commit;
+- factual change summary;
+- why it is relevant;
+- hypothesis;
+- supporting evidence;
+- contradicting evidence;
+- evidence still missing;
+- next discriminating experiment.
+
+Finish with **what to inspect or test next**, not with an unsupported culprit verdict.

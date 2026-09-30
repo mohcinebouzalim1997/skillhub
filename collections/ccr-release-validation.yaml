@@ -1,0 +1,10 @@
+schema_version: 1
+id: ccr-release-validation
+name: CCR Release Validation
+description: Skills used to reduce huge CCR comparison outputs, drill impacts to deals,
+  and correlate validated regressions with release code changes.
+skills:
+- prepare-ccr-release-evidence
+- analyze-large-result-diff
+- backtesting-drilldown
+- release-pr-forensics

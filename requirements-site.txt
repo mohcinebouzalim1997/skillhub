@@ -1,0 +1,4 @@
+# Reproducible documentation/marketplace toolchain.
+# Material 9.7.x intentionally constrains MkDocs <2 while MkDocs 2 remains a breaking transition.
+mkdocs==1.6.1
+mkdocs-material==9.7.7

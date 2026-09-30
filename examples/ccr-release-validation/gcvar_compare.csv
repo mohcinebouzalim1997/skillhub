@@ -1,0 +1,4 @@
+RowId,LegalEntity,AggregationLevel,Product,mtf00Gap,EepeInEurGap
+1,LE_ALPHA,CSA,IRS,0.00,900
+2,LE_ALPHA,CSA,IRS,0.52,1100000
+3,LE_BETA,NO_CSA,FX,0.01,2500

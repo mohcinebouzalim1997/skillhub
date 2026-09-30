@@ -1,0 +1,17 @@
+schema_version: 1
+name: Quant SkillHub
+description: >
+  A central, portable registry of trusted AI capabilities for quant, engineering and release
+  investigation. Discover once, install personally, use from any repository without polluting it.
+default_token_budget: 6000
+repository_url: null  # Auto-detected in GitHub Actions; set explicitly for local/custom builds if desired.
+security:
+  forbid_unrestricted_allowed_tools: true
+  pages_must_be_private_for_internal_content: true
+catalog:
+  default_status: verified
+  categories: [engineering, data-analysis, quant-investigation]
+  featured: [analyze-large-result-diff, backtesting-drilldown, release-pr-forensics]
+site:
+  eyebrow: Internal AI capability marketplace
+  headline: Give Copilot reusable skills, not repeated prompts.

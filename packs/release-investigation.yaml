@@ -1,0 +1,5 @@
+schema_version: 1
+id: release-investigation
+name: Release Investigation Pack
+description: End-to-end toolkit for finding what changed in results and which code changes deserve investigation.
+skills: [release-pr-forensics, compare-result-snapshots, investigate-metric-jump]

@@ -1,0 +1,39 @@
+name: Scaffold approved skill request
+on:
+  issues:
+    types: [labeled]
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+jobs:
+  scaffold:
+    if: github.event.label.name == 'skillhub-scaffold'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: skillhub scaffold-from-issue "$GITHUB_EVENT_PATH"
+      - run: skillhub validate
+      - name: Create draft pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- skills)" ]; then
+            echo "No skill files were generated" >&2
+            exit 1
+          fi
+          branch="skillhub/request-${ISSUE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add skills
+          git commit -m "Scaffold skill request #${ISSUE}"
+          git push origin "$branch"
+          gh pr create --draft --base main --head "$branch" --title "Scaffold skill request #${ISSUE}" --body "Generated from #${ISSUE}. A maintainer must complete the workflow, scripts, metadata and tests before merge."

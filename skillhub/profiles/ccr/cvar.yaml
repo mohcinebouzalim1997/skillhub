@@ -1,0 +1,104 @@
+id: cvar
+name: CCR CVAR comparison
+schema_version: 2
+materiality_profile: materiality
+metrics:
+- name: Mtf00Gap
+  aliases:
+  - Mtf00 Gap
+  - mtf00Gap
+  - Mtf00Gap
+  coverage_group_by_aliases:
+  - Currency (Test)
+  - Currency (Ref)
+  - Currency
+- name: EepeInEurGap
+  aliases:
+  - EepeInEur Gap
+  - EepeInEurGap
+  - eepeInEurGap
+identity_candidates:
+- AggregationLevel
+- RowId
+- Id
+- CvarId
+- AggregationId
+dimension_candidates:
+- LegalEntity
+- LegalEntityName
+- LegalEntityId
+- Product
+- Portfolio
+- NettingSet
+- MaturityBucket
+- Currency (Test)
+- Currency (Ref)
+- Currency
+selection:
+  top_k: 50
+patterns:
+  auto_discover: true
+  max_cardinality: 100
+  min_row_share: 0.25
+  min_abs_contribution_share: 0.2
+  max_enrichment_columns: 120
+notes:
+- Real compare-job headers use Ref/Test pairs plus Gap/Abs/Ratio result columns.
+- Materiality comes from the shared CCR release policy so CVAR/GCVAR/backtesting cannot
+  drift.
+known_compare_schema:
+  business_keys:
+  - LegalEntity
+  - AggregationLevel
+  ref_test_pairs:
+  - EepeError
+  - EepeRatio
+  - EffectiveMaturity
+  - RiskWeightedExposureFactor
+  - Mtf00
+  - CashFlowType
+  - Currency
+  - Eepe
+  - EepeInEur
+  - Rwa
+  primary_gaps:
+  - Mtf00 Gap
+  - EepeInEur Gap
+  secondary_diagnostics:
+  - Mtf00 Ratio
+  - Eepe Gap
+  - Eepe Ratio
+  - EepeInEur Ratio
+  - Rwa Gap
+  - Rwa Ratio
+  result_flags:
+  - CashFlowType (Result)
+  - Currency (Result)
+diagnostic_numeric_columns:
+- name: Mtf00Ratio
+  aliases:
+  - Mtf00 Ratio
+- name: EepeGap
+  aliases:
+  - Eepe Gap
+- name: EepeRatio
+  aliases:
+  - Eepe Ratio
+- name: EepeInEurRatio
+  aliases:
+  - EepeInEur Ratio
+- name: RwaGap
+  aliases:
+  - Rwa Gap
+- name: RwaRatio
+  aliases:
+  - Rwa Ratio
+currency_columns:
+  ref_aliases:
+  - Currency (Ref)
+  test_aliases:
+  - Currency (Test)
+  result_aliases:
+  - Currency (Result)
+  mtf00_threshold_semantics: 10000 in the row currency (for example EUR or USD)
+  eepe_in_eur_threshold_semantics: 10000 EUR

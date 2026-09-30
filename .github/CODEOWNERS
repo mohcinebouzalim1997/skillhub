@@ -1,0 +1,4 @@
+# Configure before rollout. Examples:
+# /skillhub/ @your-org/skillhub-maintainers
+# /skills/ @your-org/skillhub-maintainers
+# /.github/workflows/ @your-org/skillhub-maintainers

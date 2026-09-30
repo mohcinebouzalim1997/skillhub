@@ -1,0 +1,1041 @@
+{
+  "schema_version": 2,
+  "skillhub_version": "0.1.0",
+  "generated_at": "2026-09-30T16:03:45.090545+00:00",
+  "hub": {
+    "name": "Quant SkillHub",
+    "description": "A central, portable registry of trusted AI capabilities for quant, engineering and release investigation. Discover once, install personally, use from any repository without polluting it.\n",
+    "default_token_budget": 6000
+  },
+  "categories": {
+    "quant": 3,
+    "data-analysis": 1,
+    "quant-investigation": 1,
+    "engineering": 1
+  },
+  "skills": [
+    {
+      "id": "analyze-large-result-diff",
+      "name": "analyze-large-result-diff",
+      "title": "Analyze Large Result Diff",
+      "description": "Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM.",
+      "version": "0.3.0",
+      "category": "quant",
+      "subcategory": "large-data-forensics",
+      "tags": [
+        "ccr",
+        "cvar",
+        "gcvar",
+        "csv",
+        "performance",
+        "regression",
+        "eepe",
+        "mtf",
+        "pareto",
+        "coverage"
+      ],
+      "aliases": [
+        "large csv impact",
+        "cvar impact analyzer",
+        "gcvar impact analyzer",
+        "metric gap reducer",
+        "ccr compare analyzer"
+      ],
+      "status": "reviewed",
+      "verification": {
+        "level": "reviewed",
+        "reviewed_by": "SkillHub maintainers",
+        "last_reviewed": "2026-09-30"
+      },
+      "quality_score": 85,
+      "owner": "ccr-quant",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/analyze.py"
+      },
+      "permissions": {
+        "filesystem": "read-input-write-output",
+        "network": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "compact-export"
+      },
+      "dependencies": {
+        "commands": [],
+        "python": [],
+        "skills": []
+      },
+      "recommended_dependencies": {
+        "python": [
+          "polars>=1.34,<2"
+        ]
+      },
+      "exports": {
+        "evidence_schema": "schemas/evidence.schema.json",
+        "llm_context": "agent_context.md"
+      },
+      "examples": [
+        {
+          "title": "CVAR with production defaults",
+          "command": "skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar"
+        },
+        {
+          "title": "CVAR with 80 percent impact coverage",
+          "command": "skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar --coverage 0.8"
+        },
+        {
+          "title": "GCVAR with an overridden threshold",
+          "command": "skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --output out/gcvar --threshold \"EepeInEur Gap=25000\""
+        }
+      ],
+      "latest_changelog": "## 0.3.0 — 2026-09-30\n\n- Added native-currency-aware MTF00 Pareto selection: EUR/USD (and any other observed currency) are covered independently rather than summed.\n- Added top-1/top-3/top-10, HHI/effective-contributor, cancellation, threshold-capture and 50/80/90/95% contributor-count diagnostics.\n- Added selected-row secondary numeric diagnostics for MTF/EEPE/RWA gaps and ratios.\n- Added robust percentage parsing for ratio fields exported as `0.25%` or parenthesized negatives.\n- Calibrated dimensions and Ref/Test/Result clues to the supplied CVAR/GCVAR compare layout.\n- Added aggregation-path shape diagnostics (for example `LegalEntity>Master`) and explicit selected AggregationLevel reporting without treating high-cardinality IDs as categorical patterns.",
+      "estimated_tokens_full": 5394,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 1389,
+          "estimated_tokens": 347,
+          "sha256": "a7eb1b67dd924f983a70b786344610e3acedb5ee49e282464ccb05f89b3cf7f7"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 4628,
+          "estimated_tokens": 1154,
+          "sha256": "1aeb9196e45585d2a4c085393bf9dc39902fa1a0430e7962e2289d51d2d9c382"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 237,
+          "estimated_tokens": 60,
+          "sha256": "9166052cb152305b162919847aa2f2753cae81530e141897d342daa92f7883af"
+        },
+        {
+          "path": "references/method.md",
+          "bytes": 301,
+          "estimated_tokens": 76,
+          "sha256": "57e58699504bd15b964db37abbf4ed1e3d63d44347ac1fe3e68ddd7bd5d78c9f"
+        },
+        {
+          "path": "scripts/analyze.py",
+          "bytes": 13465,
+          "estimated_tokens": 3367,
+          "sha256": "75fb0884acb67e57b41ee38c0aed15d28db3a0050629485d6b59539b487162f5"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1430,
+          "estimated_tokens": 358,
+          "sha256": "0553b81b6e045dc5b8c8735ce35135a3ab475fec1655fd37e58ea14dc9813b2d"
+        },
+        {
+          "path": "tests/README.md",
+          "bytes": 128,
+          "estimated_tokens": 32,
+          "sha256": "dd47584fa13a7213a2d796a6b3eea927b627663caa210ff5ea4e7b53f9b01064"
+        }
+      ]
+    },
+    {
+      "id": "backtesting-drilldown",
+      "name": "backtesting-drilldown",
+      "title": "Backtesting Drilldown",
+      "description": "Use compact upstream CVAR or GCVAR evidence to filter a much larger CCR backtesting comparison CSV early, derive DealId from the TRD segment of AggregationLevel when necessary, rank material deal contributors by Pareto coverage, and return only compact evidence.",
+      "version": "0.3.0",
+      "category": "quant",
+      "subcategory": "ccr-forensics",
+      "tags": [
+        "ccr",
+        "backtesting",
+        "deal",
+        "csv",
+        "performance",
+        "regression",
+        "trd",
+        "pareto"
+      ],
+      "aliases": [
+        "deal drilldown",
+        "backtesting impact",
+        "ccr deal contributors",
+        "trd drilldown"
+      ],
+      "status": "reviewed",
+      "verification": {
+        "level": "reviewed",
+        "reviewed_by": "SkillHub maintainers",
+        "last_reviewed": "2026-09-30"
+      },
+      "quality_score": 85,
+      "owner": "ccr-quant",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/drilldown.py"
+      },
+      "permissions": {
+        "filesystem": "read-input-write-output",
+        "network": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "compact-export"
+      },
+      "dependencies": {
+        "commands": [],
+        "python": [],
+        "skills": [
+          "analyze-large-result-diff"
+        ]
+      },
+      "recommended_dependencies": {
+        "python": [
+          "polars>=1.34,<2"
+        ]
+      },
+      "exports": {},
+      "examples": [
+        {
+          "title": "Drill CVAR impact into backtesting deals",
+          "command": "skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis"
+        },
+        {
+          "title": "Use 80 percent deal coverage",
+          "command": "skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis --coverage 0.8"
+        }
+      ],
+      "latest_changelog": "## 0.3.0 — 2026-09-30\n\n- Added native-currency-aware MTF00 deal concentration and 50/80/90/95% contributor-count diagnostics.\n- Added a second selective pass over only chosen deals for Ref/Test, Result, RWA and ratio diagnostics.\n- Preserved fast upstream Legal Entity filtering and `/TRD:<DEAL_ID>` extraction from backtesting AggregationLevel.\n- Added multi-currency and selected-deal regression tests.",
+      "estimated_tokens_full": 4877,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 885,
+          "estimated_tokens": 221,
+          "sha256": "2a0eb4ad07e14152cca570fa561bdad31c1d33e3eab61a018a0abe40474d6101"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 2711,
+          "estimated_tokens": 678,
+          "sha256": "1d2f3aa05c4cd418840b3f74710cbc02bcda12dafacb67efd337f35fec19aa11"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 146,
+          "estimated_tokens": 37,
+          "sha256": "907c53e6cc6b906cca6ae7d58d78aa18e5eb48391b0969bc293a063c3d9cb792"
+        },
+        {
+          "path": "references/method.md",
+          "bytes": 254,
+          "estimated_tokens": 64,
+          "sha256": "0d2b96e473e0070ad0e5ef6d39f6070e5cee6928be2054ce779e2f941d909af5"
+        },
+        {
+          "path": "scripts/drilldown.py",
+          "bytes": 14229,
+          "estimated_tokens": 3558,
+          "sha256": "51061cdc010cc17c4497415537daad7cce7dc162501cf1684c8ac9ef4709d1d6"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1189,
+          "estimated_tokens": 298,
+          "sha256": "9e5922e8e3582a932ca6c54d4e0567e597748d7891c2ea5d4bf9b17ecf2cfbe3"
+        },
+        {
+          "path": "tests/README.md",
+          "bytes": 83,
+          "estimated_tokens": 21,
+          "sha256": "0a820b728a8259518a5ece36a65ea48e5dc7f0a28d661ae7b830c268e9261e45"
+        }
+      ]
+    },
+    {
+      "id": "compare-result-snapshots",
+      "name": "compare-result-snapshots",
+      "title": "Compare Result Snapshots",
+      "description": "Compare two CSV result snapshots deterministically, identify changed aggregate metrics, missing or new keys, and the largest row-level movers. Use for regression outputs, risk metrics, benchmarks, prices, latency, PnL or any before/after tabular result before asking the model to explain causes.\n",
+      "version": "0.1.0",
+      "category": "data-analysis",
+      "subcategory": "regression-analysis",
+      "tags": [
+        "csv",
+        "regression",
+        "metrics",
+        "before-after",
+        "comparison",
+        "data"
+      ],
+      "aliases": [
+        "compare runs",
+        "compare results",
+        "metric diff",
+        "csv diff",
+        "regression output"
+      ],
+      "status": "verified",
+      "verification": {
+        "level": "verified",
+        "reviewed_by": "Quant Engineering",
+        "last_reviewed": "2026-09-29",
+        "tests_required": true
+      },
+      "quality_score": 100,
+      "owner": "Quant Engineering",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/compare_results.py"
+      },
+      "permissions": {
+        "filesystem": "read-input-write-analysis-output",
+        "network": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "context-export"
+      },
+      "dependencies": {
+        "commands": [],
+        "python": [],
+        "note": "standard-library-only"
+      },
+      "recommended_dependencies": {},
+      "exports": {
+        "compact_context": true,
+        "default_budget": 6000
+      },
+      "examples": [
+        {
+          "title": "Compare two CCR snapshots",
+          "command": "python scripts/compare_results.py --before before.csv --after after.csv --keys counterparty,date --metrics EEPE,EPE --output analysis"
+        }
+      ],
+      "latest_changelog": "## 0.1.0\n\n- Initial deterministic CSV snapshot comparison with aggregate metric deltas and top movers.",
+      "estimated_tokens_full": 3328,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 116,
+          "estimated_tokens": 29,
+          "sha256": "da811056e11fdc3e8c8cec135314daec446964637c835b95c2b1699319d28b1b"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 1921,
+          "estimated_tokens": 481,
+          "sha256": "a927b1af220eb5c44b69213d313c7738627d6d77fd1cc979dc7772d8120a76f3"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 191,
+          "estimated_tokens": 48,
+          "sha256": "b9ba7c19aab5fb09d4e69e43858f7d429cdeb0340df3f2e5c63f749949c9f8f6"
+        },
+        {
+          "path": "references/comparison-method.md",
+          "bytes": 589,
+          "estimated_tokens": 148,
+          "sha256": "cda96f565c32ad85f068249561216cd833135497ff40292c1edd440e4a1683b0"
+        },
+        {
+          "path": "scripts/compare_results.py",
+          "bytes": 9376,
+          "estimated_tokens": 2342,
+          "sha256": "91eb4d98eddad033ed1e9d71a91ad3aa286f7a9212411624cc5394bc3a30595b"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1055,
+          "estimated_tokens": 264,
+          "sha256": "c6a3b2d1fa1fbf983a278177a51d1411400eb284c7305fc97c55662e15a5a64c"
+        },
+        {
+          "path": "tests/README.md",
+          "bytes": 63,
+          "estimated_tokens": 16,
+          "sha256": "099d8aa2c1855601c8e83eddb318c6896ba3bb470ddf2a1efcc04c7ba25da76c"
+        }
+      ]
+    },
+    {
+      "id": "investigate-metric-jump",
+      "name": "investigate-metric-jump",
+      "title": "Investigate Metric Jump",
+      "description": "Orchestrate an evidence-based investigation of an unexpected quantitative metric jump by combining deterministic before/after result analysis with release PR forensics. Use for EEPE, EPE, CVA, PFE, PnL, price, latency or other regression metrics when you have a good/bad result and a good/bad code ref.\n",
+      "version": "0.1.0",
+      "category": "quant-investigation",
+      "subcategory": "regression-root-cause",
+      "tags": [
+        "quant",
+        "ccr",
+        "xva",
+        "regression",
+        "metric",
+        "root-cause",
+        "evidence"
+      ],
+      "aliases": [
+        "eepe jump",
+        "cva jump",
+        "metric regression",
+        "quant incident",
+        "root cause"
+      ],
+      "status": "verified",
+      "verification": {
+        "level": "verified",
+        "reviewed_by": "Quant Engineering",
+        "last_reviewed": "2026-09-29",
+        "tests_required": true
+      },
+      "quality_score": 100,
+      "owner": "Quant Engineering",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/build_investigation_brief.py"
+      },
+      "permissions": {
+        "filesystem": "read-analysis-artifacts-write-brief",
+        "network": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "context-export"
+      },
+      "dependencies": {
+        "commands": [],
+        "python": [],
+        "skills": [
+          "compare-result-snapshots",
+          "release-pr-forensics"
+        ]
+      },
+      "recommended_dependencies": {},
+      "exports": {
+        "compact_context": true,
+        "default_budget": 6000
+      },
+      "examples": [
+        {
+          "title": "Correlate result and code changes",
+          "command": "python scripts/build_investigation_brief.py --comparison analysis/comparison.json --candidates release-analysis/candidates.json --metric EEPE --output investigation.md"
+        }
+      ],
+      "latest_changelog": "## 0.1.0\n\n- Initial workflow combining result snapshot evidence with release-PR candidate evidence.",
+      "estimated_tokens_full": 2253,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 113,
+          "estimated_tokens": 29,
+          "sha256": "948f9b17fe48b44b13f5d7940ea75870947c4264e8b1534ae3ea854de55afb62"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 3449,
+          "estimated_tokens": 850,
+          "sha256": "6e39f0c579eea5515d2455a801cec1c654b76e3cf0957bc9c6aed8f69eb3499d"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 254,
+          "estimated_tokens": 64,
+          "sha256": "eb07520a589b285f205447aa5503ad57bdce7000a47bfa6aa1c31949dc51948d"
+        },
+        {
+          "path": "references/ccr-signals.md",
+          "bytes": 1095,
+          "estimated_tokens": 274,
+          "sha256": "cbf9cbbbe18539d8a39c9d51516cb66e8230b08e174b5a80958d42b9b6ced806"
+        },
+        {
+          "path": "references/investigation-strategy.md",
+          "bytes": 449,
+          "estimated_tokens": 112,
+          "sha256": "ca2dce692176d53c0aecca13889a41f8e0de05b012eabd58ea3c1f0d3628c216"
+        },
+        {
+          "path": "scripts/build_investigation_brief.py",
+          "bytes": 2496,
+          "estimated_tokens": 622,
+          "sha256": "a66d890c8b87fd8b5293cc51c6cd4d0b3f0ccf2bf866f0c498c8c3c9e0ba5604"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1141,
+          "estimated_tokens": 286,
+          "sha256": "3efd46d5a386f9e90c0f5876037fb0a310ee924a86670753c85646198ec10984"
+        },
+        {
+          "path": "tests/README.md",
+          "bytes": 62,
+          "estimated_tokens": 16,
+          "sha256": "4f4fbd9934215e76293ce540b2b01eb54cb99e2082c01c0871542765a5655600"
+        }
+      ]
+    },
+    {
+      "id": "prepare-ccr-release-evidence",
+      "name": "prepare-ccr-release-evidence",
+      "title": "Prepare CCR Release Evidence",
+      "description": "Orchestrate the deterministic data-reduction part of CCR release validation: reduce CVAR and GCVAR compare CSVs, drill only impacted Legal Entities into huge backtesting CSVs, build one compact LLM handoff, and optionally prefetch reusable release-PR forensic candidates.",
+      "version": "0.2.0",
+      "category": "quant",
+      "subcategory": "workflow-preparation",
+      "tags": [
+        "ccr",
+        "release",
+        "cvar",
+        "gcvar",
+        "backtesting",
+        "workflow",
+        "evidence",
+        "pr-forensics"
+      ],
+      "aliases": [
+        "prepare ccr release",
+        "validate ccr release data",
+        "ccr release evidence"
+      ],
+      "status": "reviewed",
+      "verification": {
+        "level": "reviewed",
+        "reviewed_by": "SkillHub maintainers",
+        "last_reviewed": "2026-09-30"
+      },
+      "quality_score": 80,
+      "owner": "ccr-quant",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/prepare.py"
+      },
+      "permissions": {
+        "filesystem": "read-input-write-output",
+        "network": "optional-github-only"
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "compact-export"
+      },
+      "dependencies": {
+        "commands": [],
+        "python": [],
+        "skills": [
+          "analyze-large-result-diff",
+          "backtesting-drilldown"
+        ]
+      },
+      "recommended_dependencies": {
+        "python": [
+          "polars>=1.34,<2"
+        ],
+        "commands": [
+          "gh"
+        ]
+      },
+      "exports": {},
+      "examples": [
+        {
+          "title": "Prepare CVAR and GCVAR evidence",
+          "command": "skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --cvar-backtesting cvar-bt.csv --gcvar gcvar.csv --gcvar-backtesting gcvar-bt.csv --prod-ref release/26.9 --candidate-ref release/26.10 --output out/ccr-release"
+        },
+        {
+          "title": "Prepare evidence and prefetch candidate PRs",
+          "command": "skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --gcvar gcvar.csv --prod-ref release/26.9 --candidate-ref release/26.10 --repo OWNER/REPO --with-prs --output out/ccr-release"
+        }
+      ],
+      "latest_changelog": "## 0.2.0 — 2026-09-30\n\n- Added one-command CVAR + GCVAR + targeted backtesting workspace preparation using the calibrated real compare schema.\n- Compact workflow context now exposes impact concentration, contributor ladders, Ref/Test clues, ratio/RWA diagnostics and deal evidence without embedding raw CSVs.\n- Added optional generic `release-pr-forensics` prefetch between production and candidate refs.\n- Standardized the real release naming examples (`release/26.9`, `release/26.10`).",
+      "estimated_tokens_full": 5102,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 728,
+          "estimated_tokens": 182,
+          "sha256": "e425683b367d02b8caf7ed94aa0b06cd96687e31a74052b154d49d145302b532"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 2124,
+          "estimated_tokens": 531,
+          "sha256": "9421b0d6550e9f2b66146fb55c3517cde613604de0686019c0402a42b4e68cb7"
+        },
+        {
+          "path": "scripts/prepare.py",
+          "bytes": 16116,
+          "estimated_tokens": 4026,
+          "sha256": "c848341444ea8caa53cd0c2940057086f2718eee6b7011d525e485b65b15523f"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1451,
+          "estimated_tokens": 363,
+          "sha256": "6a684f16782e9ff669dbdb5a7b903fa8006993c1ffa154149f6f64d5577e0fe6"
+        }
+      ]
+    },
+    {
+      "id": "release-pr-forensics",
+      "name": "release-pr-forensics",
+      "title": "Release PR Forensics",
+      "description": "Investigate regressions and metric impacts by retrieving the pull requests and direct commits that entered a release, a Git ref/commit interval, or a date window; rank evidence-backed candidate PRs; then inspect selective high-information patches before escalating to full diffs. Use when a release, build, result or metric became bad and you need to identify the code changes worth testing.\n",
+      "version": "0.2.0",
+      "category": "engineering",
+      "subcategory": "release-investigation",
+      "tags": [
+        "github",
+        "pull-request",
+        "release",
+        "regression",
+        "debugging",
+        "diff",
+        "forensic",
+        "commit",
+        "date-range"
+      ],
+      "aliases": [
+        "find culprit pr",
+        "release regression",
+        "compare releases",
+        "suspicious pr",
+        "what changed",
+        "release impact"
+      ],
+      "status": "verified",
+      "verification": {
+        "level": "verified",
+        "reviewed_by": "Quant Engineering",
+        "last_reviewed": "2026-09-29",
+        "tests_required": true
+      },
+      "quality_score": 100,
+      "owner": "Quant Engineering",
+      "runtime": {
+        "python": ">=3.10",
+        "gh": "authenticated"
+      },
+      "entrypoints": {
+        "default": "scripts/investigate.py",
+        "collect": "scripts/collect_prs.py",
+        "inspect": "scripts/inspect_pr.py",
+        "inspect-commit": "scripts/inspect_commit.py",
+        "rank": "scripts/rank_candidates.py"
+      },
+      "permissions": {
+        "github": [
+          "contents:read",
+          "pull_requests:read",
+          "metadata:read"
+        ],
+        "filesystem": "write-analysis-output",
+        "production_write": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "context-export"
+      },
+      "dependencies": {
+        "commands": [
+          "gh"
+        ],
+        "python": []
+      },
+      "recommended_dependencies": {},
+      "exports": {
+        "compact_context": true,
+        "default_budget": 6000
+      },
+      "examples": [
+        {
+          "title": "Investigate a release",
+          "command": "python scripts/investigate.py --repo OWNER/REPO --release release/26.10 --query \"EEPE jump\" --output release-analysis"
+        },
+        {
+          "title": "Investigate two commits",
+          "command": "python scripts/investigate.py --repo OWNER/REPO --base GOOD_SHA --head BAD_SHA --query \"latency regression\" --output release-analysis"
+        },
+        {
+          "title": "Investigate a date window",
+          "command": "python scripts/investigate.py --repo OWNER/REPO --from-date 2026-09-15 --to-date 2026-09-22 --base-branch main --query \"metric jump\" --output release-analysis"
+        }
+      ],
+      "latest_changelog": "## 0.2.0 — 2026-09-29\n\n- Added named-release mode with automatic previous sibling inference for refs such as `release/26.10`.\n- Added generic ref/commit range mode and merge-date window mode.\n- Added best-effort direct-commit detection for date investigations when a base branch is provided.\n- Added one-command `investigate.py` orchestration.\n- Replaced default full-diff retrieval with smart per-file patch selection and explicit diff plans.\n- Added optional first-bad-date ranking signal and richer risk-sensitive ranking heuristics.",
+      "estimated_tokens_full": 14649,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 666,
+          "estimated_tokens": 166,
+          "sha256": "fbab80d6cbfd8b6bed4741ada24ea87c4c16b975491a074baf7875b1c1ee552b"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 7640,
+          "estimated_tokens": 1905,
+          "sha256": "1e7aa04ba65731e48babdc902296ef56dad38c6d8041313081eebb8eef781f03"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 654,
+          "estimated_tokens": 164,
+          "sha256": "6ec5df19cb530a4c578c706e1877e46d6716d853113229f4a9b3a73a4b67a4a7"
+        },
+        {
+          "path": "references/investigation-method.md",
+          "bytes": 1443,
+          "estimated_tokens": 361,
+          "sha256": "0be25f26ea3570c60e283d0e107697d33a4b0bf5a2cf5d499f72d9946a5f0c9b"
+        },
+        {
+          "path": "scripts/_github.py",
+          "bytes": 7050,
+          "estimated_tokens": 1763,
+          "sha256": "2a6ea3906a27bd5722d018dacd52fb102850e31f6fe7f17f5ae7ceacca974738"
+        },
+        {
+          "path": "scripts/collect_prs.py",
+          "bytes": 14644,
+          "estimated_tokens": 3658,
+          "sha256": "55401aab5fc278322b537c3760e980139d7092da9e51b48da94ef1ede563a771"
+        },
+        {
+          "path": "scripts/collect_release_prs.py",
+          "bytes": 1051,
+          "estimated_tokens": 263,
+          "sha256": "61bd0d69b51c8b05334dca1631c8f06e8429e280f6c2591c4fe5c24b32f4afa3"
+        },
+        {
+          "path": "scripts/inspect_commit.py",
+          "bytes": 2237,
+          "estimated_tokens": 559,
+          "sha256": "14ce089524e3a33f1ac0f6ce5ec15eccebc5c2347461104076775b83415ed3df"
+        },
+        {
+          "path": "scripts/inspect_pr.py",
+          "bytes": 10587,
+          "estimated_tokens": 2646,
+          "sha256": "9e7e7bbdd189a582f794eff0f252c4843223aeacd16b8c6013dce6cbf9cfd2e4"
+        },
+        {
+          "path": "scripts/investigate.py",
+          "bytes": 3030,
+          "estimated_tokens": 758,
+          "sha256": "83c0c0d782ef6dfb4eebbb4c220b90aec4a385596450f0c74c543599834fa041"
+        },
+        {
+          "path": "scripts/rank_candidates.py",
+          "bytes": 7761,
+          "estimated_tokens": 1941,
+          "sha256": "7c0cebfa29b0776dcc5c1f4fb496824f521a0d4c7b8cb17dbe635ae942d05f03"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 1670,
+          "estimated_tokens": 418,
+          "sha256": "747c37245eb966ec5b8665b8b2eda5f708c4507c0671ddcdbde2ebaeb60e8519"
+        },
+        {
+          "path": "tests/README.md",
+          "bytes": 188,
+          "estimated_tokens": 47,
+          "sha256": "9bf07b78a9fcdfd294ee5607837481e7584ebe0180eb70077d78adeac1164425"
+        }
+      ]
+    }
+  ],
+  "packs": [
+    {
+      "schema_version": 1,
+      "id": "ccr-release-validation",
+      "name": "CCR Release Validation Skills",
+      "description": "Reusable skills required by the multi-agent CCR release-validation workflow.",
+      "skills": [
+        "prepare-ccr-release-evidence",
+        "analyze-large-result-diff",
+        "backtesting-drilldown",
+        "release-pr-forensics"
+      ],
+      "_file": "ccr-release-validation.yaml"
+    },
+    {
+      "schema_version": 1,
+      "id": "release-investigation",
+      "name": "Release Investigation Pack",
+      "description": "End-to-end toolkit for finding what changed in results and which code changes deserve investigation.",
+      "skills": [
+        "release-pr-forensics",
+        "compare-result-snapshots",
+        "investigate-metric-jump"
+      ],
+      "_file": "release-investigation.yaml"
+    }
+  ],
+  "collections": [
+    {
+      "schema_version": 1,
+      "id": "ccr-release-validation",
+      "name": "CCR Release Validation",
+      "description": "Skills used to reduce huge CCR comparison outputs, drill impacts to deals, and correlate validated regressions with release code changes.",
+      "skills": [
+        "prepare-ccr-release-evidence",
+        "analyze-large-result-diff",
+        "backtesting-drilldown",
+        "release-pr-forensics"
+      ],
+      "_file": "ccr-release-validation.yaml"
+    },
+    {
+      "schema_version": 1,
+      "id": "quant-investigation",
+      "name": "Quant Investigation",
+      "description": "Reusable capabilities for exposure/metric changes, deterministic snapshot comparison and causal investigation design.",
+      "icon": "material/chart-line",
+      "skills": [
+        "investigate-metric-jump",
+        "compare-result-snapshots",
+        "release-pr-forensics"
+      ],
+      "featured": true,
+      "_file": "quant-investigation.yaml"
+    },
+    {
+      "schema_version": 1,
+      "id": "release-engineering",
+      "name": "Release & Regression Engineering",
+      "description": "Capabilities for understanding what changed between builds/releases and finding the smallest evidence-backed candidate set.",
+      "icon": "material/source-branch",
+      "skills": [
+        "release-pr-forensics",
+        "compare-result-snapshots",
+        "investigate-metric-jump"
+      ],
+      "featured": true,
+      "_file": "release-engineering.yaml"
+    }
+  ],
+  "stacks": [
+    {
+      "schema_version": 1,
+      "id": "ccr-release-validation",
+      "name": "CCR Release Validation Stack",
+      "description": "Installs the reusable CCR validation skills and the specialized CVAR, GCVAR and synthesis agents. The workflow specification remains centrally documented in SkillHub.",
+      "skills": [
+        "prepare-ccr-release-evidence",
+        "analyze-large-result-diff",
+        "backtesting-drilldown",
+        "release-pr-forensics"
+      ],
+      "agents": [
+        "ccr-cvar-release-validator",
+        "ccr-gcvar-release-validator",
+        "ccr-release-validation-synthesizer"
+      ],
+      "tools": {
+        "embedded": "skill-scripts"
+      },
+      "external_dependencies": {
+        "commands": [
+          "gh"
+        ]
+      },
+      "recommended_python": [
+        "polars"
+      ],
+      "workflow": "ccr-release-validation",
+      "_file": "ccr-release-validation.yaml"
+    }
+  ],
+  "workflows": [
+    {
+      "schema_version": 2,
+      "id": "ccr-release-validation",
+      "name": "CCR Release Validation",
+      "description": "Multi-agent workflow for validating a candidate CCR release against production using CVAR and GCVAR compare-job evidence, targeted deal-level backtesting, and reusable PR/code forensics when material impacts require explanation.",
+      "status": "usable-today-explicit-orchestrated-handoff",
+      "owner": "ccr-quant",
+      "release_naming": {
+        "examples": [
+          "release/26.9",
+          "release/26.10"
+        ],
+        "zero_pad_single_digit_minor": false
+      },
+      "materiality_policy": {
+        "threshold_operator": "gt",
+        "default_absolute_threshold": 10000.0,
+        "default_coverage_target": 0.9,
+        "configurable_coverage_examples": [
+          0.8,
+          0.9
+        ],
+        "metrics": [
+          "Mtf00Gap",
+          "EepeInEurGap"
+        ]
+      },
+      "trigger_examples": [
+        "Validate candidate release release/26.10 against production release/26.9.",
+        "Validate the CCR release using the CVAR and GCVAR compare-job outputs and explain material regressions."
+      ],
+      "inputs": {
+        "required": [
+          "production_ref",
+          "candidate_ref",
+          "cvar_comparison_csv",
+          "gcvar_comparison_csv"
+        ],
+        "recommended": [
+          "cvar_backtesting_csv",
+          "gcvar_backtesting_csv",
+          "repository"
+        ],
+        "optional": [
+          "coverage_target",
+          "first_bad_date",
+          "materiality_overrides"
+        ]
+      },
+      "agents": [
+        {
+          "id": "ccr-cvar-release-validator",
+          "role": "Reduce CVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.",
+          "phase": "validate"
+        },
+        {
+          "id": "ccr-gcvar-release-validator",
+          "role": "Reduce GCVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.",
+          "phase": "validate"
+        },
+        {
+          "id": "ccr-release-validation-synthesizer",
+          "role": "Combine compact validator evidence, explain shared/isolated patterns, and use reusable PR forensics when code-level investigation is justified.",
+          "phase": "synthesize"
+        }
+      ],
+      "skills": [
+        "prepare-ccr-release-evidence",
+        "analyze-large-result-diff",
+        "backtesting-drilldown",
+        "release-pr-forensics"
+      ],
+      "execution": [
+        {
+          "stage": "evidence-preparation",
+          "tool": "prepare-ccr-release-evidence",
+          "inputs": [
+            "cvar_comparison_csv",
+            "cvar_backtesting_csv",
+            "gcvar_comparison_csv",
+            "gcvar_backtesting_csv",
+            "production_ref",
+            "candidate_ref"
+          ],
+          "produces": [
+            "workflow_context.md",
+            "workflow_manifest.json",
+            "pr_forensics_hints.json"
+          ],
+          "note": "Deterministic fast reduction. Raw CSVs stay outside LLM context."
+        },
+        {
+          "stage": "cvar-validation",
+          "agent": "ccr-cvar-release-validator",
+          "inputs": [
+            "cvar_comparison_csv",
+            "cvar_backtesting_csv"
+          ],
+          "may_run_in_parallel_with": [
+            "gcvar-validation"
+          ],
+          "produces": [
+            "cvar/summary.json",
+            "cvar/agent_context.md",
+            "cvar-backtesting/backtesting_summary.json",
+            "cvar-backtesting/agent_context.md"
+          ]
+        },
+        {
+          "stage": "gcvar-validation",
+          "agent": "ccr-gcvar-release-validator",
+          "inputs": [
+            "gcvar_comparison_csv",
+            "gcvar_backtesting_csv"
+          ],
+          "may_run_in_parallel_with": [
+            "cvar-validation"
+          ],
+          "produces": [
+            "gcvar/summary.json",
+            "gcvar/agent_context.md",
+            "gcvar-backtesting/backtesting_summary.json",
+            "gcvar-backtesting/agent_context.md"
+          ]
+        },
+        {
+          "stage": "synthesis-root-cause",
+          "agent": "ccr-release-validation-synthesizer",
+          "consumes": [
+            "cvar/summary.json",
+            "cvar-backtesting/backtesting_summary.json",
+            "gcvar/summary.json",
+            "gcvar-backtesting/backtesting_summary.json"
+          ],
+          "optional_skill_calls": [
+            "release-pr-forensics"
+          ],
+          "produces": [
+            "ccr-release-validation-report"
+          ]
+        }
+      ],
+      "operating_rules": [
+        "Raw huge CSV files are local tool inputs only and never LLM context.",
+        "The strict materiality rule is abs(gap) > 10000; exactly 10000 is not material.",
+        "Coverage is calculated independently per metric from absolute material movement; MTF00 and EEPE units are never mixed.",
+        "Backtesting is filtered first by impacted LegalEntity; its AggregationLevel is deal-grained and DealId is derived from the TRD segment when necessary.",
+        "PR ranking is evidence for investigation, not proof of causality.",
+        "Mtf00Gap materiality is 10000 in the row currency. When multiple currencies are present, Pareto coverage is computed independently per currency; native EUR/USD amounts are never summed for concentration statistics.",
+        "EepeInEurGap is EUR-denominated and Pareto coverage is global across the file.",
+        "The compare schema contains useful secondary diagnostics (RWA gap/ratio, EEPE gap/ratio, EffectiveMaturity and RiskWeightedExposureFactor Ref/Test changes, CashFlowType/Currency result flags). These are explanation clues, not primary materiality triggers."
+      ],
+      "notes": [
+        "The deterministic CVAR/GCVAR/backtesting data plane is calibrated to the provided real compare-file screenshots.",
+        "Full production approval still benefits from a sanitized real CSV sample and one historical known regression to verify exact values, edge cases and throughput.",
+        "Multi-agent automatic handoff depends on the GitHub Copilot environment; the same workflow can be executed today with explicit validator then synthesizer handoff."
+      ],
+      "_file": "ccr-release-validation.yaml"
+    }
+  ],
+  "agents": [
+    {
+      "id": "ccr-cvar-release-validator",
+      "name": "ccr-cvar-release-validator",
+      "description": "Specialized CCR agent that validates the CVAR side of a candidate release by reducing the large CVAR comparison, selecting the largest material MTF00/EEPE impacts, detecting patterns across Ref/Test columns and business dimensions, then drilling only impacted Legal Entities into backtesting deal evidence."
+    },
+    {
+      "id": "ccr-gcvar-release-validator",
+      "name": "ccr-gcvar-release-validator",
+      "description": "Specialized CCR agent that validates the GCVAR side of a candidate release using the same real compare-file schema and materiality policy as CVAR, then drills impacted Legal Entities into backtesting deal evidence."
+    },
+    {
+      "id": "ccr-release-validation-synthesizer",
+      "name": "ccr-release-validation-synthesizer",
+      "description": "CCR workflow synthesis/root-cause agent that combines compact CVAR and GCVAR validator evidence, identifies shared/isolated release impacts, invokes reusable PR forensics when justified, and produces an evidence-backed release-validation investigation brief."
+    }
+  ]
+}

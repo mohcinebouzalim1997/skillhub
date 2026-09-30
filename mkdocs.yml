@@ -1,0 +1,103 @@
+site_name: Quant SkillHub
+site_description: Internal marketplace for trusted, portable AI skills used with GitHub Copilot and Microsoft Copilot.
+site_author: Quant Engineering
+site_dir: dist/site
+strict: true
+use_directory_urls: true
+
+theme:
+  name: material
+  language: en
+  custom_dir: overrides
+  font: false
+  logo: assets/skillhub-mark.svg
+  favicon: assets/skillhub-mark.svg
+  palette:
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  features:
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - toc.follow
+
+plugins:
+  - search:
+      lang: en
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - assets/stylesheets/extra.css
+
+extra_javascript:
+  - assets/javascripts/marketplace.js
+
+extra:
+  generator: false
+  social: []
+
+nav:
+  - Home: index.md
+  - Marketplace:
+      - Discover skills: marketplace/index.md
+      - Collections: collections/index.md
+      - Packs: packs/index.md
+      - Stacks: stacks/index.md
+      - Workflows: workflows/index.md
+      - Agents: agents/index.md
+  - Getting started:
+      - Start here: getting-started/index.md
+      - GitHub Copilot: getting-started/github-copilot.md
+      - Microsoft Copilot: getting-started/microsoft-copilot.md
+      - GitHub Pages deployment: getting-started/deploy.md
+  - Contribute:
+      - Add a skill: contributing/index.md
+      - Skill specification: SKILL-SPEC.md
+  - Platform:
+      - Project guide: project/PROJECT-GUIDE.md
+      - CCR release validation: project/CCR-RELEASE-VALIDATION.md
+      - CCR operator runbook: project/CCR-RELEASE-VALIDATION-RUNBOOK.md
+      - CCR engineering review: project/ENGINEERING-REVIEW-2026-09-30.md
+      - Architecture: ARCHITECTURE.md
+      - CLI reference: platform/cli.md
+      - Security: platform/security.md

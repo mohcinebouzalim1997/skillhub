@@ -1,0 +1,7 @@
+schema_version: 1
+id: quant-investigation
+name: Quant Investigation
+description: Reusable capabilities for exposure/metric changes, deterministic snapshot comparison and causal investigation design.
+icon: material/chart-line
+skills: [investigate-metric-jump, compare-result-snapshots, release-pr-forensics]
+featured: true
