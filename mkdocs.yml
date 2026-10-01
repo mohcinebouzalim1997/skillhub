@@ -97,7 +97,7 @@ nav:
       - Project guide: project/PROJECT-GUIDE.md
       - CCR release validation: project/CCR-RELEASE-VALIDATION.md
       - CCR operator runbook: project/CCR-RELEASE-VALIDATION-RUNBOOK.md
-      - CCR engineering review: project/ENGINEERING-REVIEW-2026-09-30.md
+      - CCR engineering review: project/ENGINEERING-REVIEW-2026-10-01.md
       - Architecture: ARCHITECTURE.md
       - CLI reference: platform/cli.md
       - Security: platform/security.md

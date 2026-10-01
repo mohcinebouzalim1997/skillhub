@@ -19,16 +19,22 @@ Install the CCR Release Validation terrain:
 skillhub install-stack ccr-release-validation --check-deps
 ```
 
-Run CVAR reduction:
+Run CVAR workbook reduction:
 
 ```powershell
-skillhub run analyze-large-result-diff -- --profile cvar --input compare.csv --output evidence --threshold EepeInEurGap=100000
+skillhub run analyze-large-result-diff -- --profile cvar --input CcrMetrics.xlsx --output evidence --coverage 0.90
 ```
 
-Run backtesting drilldown:
+Run backtesting workbook drilldown:
 
 ```powershell
-skillhub run backtesting-drilldown -- --input backtesting.csv --evidence evidence/summary.json --output bt
+skillhub run backtesting-drilldown -- --input Backtesting.xlsx --evidence evidence/summary.json --output bt --coverage 0.90
+```
+
+Run ErrorByTrade correlation:
+
+```powershell
+skillhub run analyze-ccr-errors -- --input ErrorByTrade.xlsx --evidence evidence/summary.json --output errors
 ```
 
 Run PR forensics for a named release:

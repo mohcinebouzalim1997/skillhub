@@ -18,6 +18,8 @@ from skillhub.runtime.csv_engine import (
 from skillhub.runtime.diagnostics import summarize_numeric_columns, summarize_ref_test_changes, summarize_result_flags
 from skillhub.runtime.evidence import compact_agent_markdown, load_evidence, write_evidence
 from skillhub.runtime.profiling import StageTimer
+from skillhub.runtime.workbook import is_excel, materialize_ccr_comparison_workbook
+from skillhub.runtime.ccr import summarize_deal_families, mtf_eepe_relationship
 
 
 def _resolve_filters(
@@ -116,6 +118,16 @@ def main() -> int:
     timer = StageTimer()
     source = Path(args.input).resolve()
     out = ensure_output_dir(args.output)
+    original_source = source
+    workbook_materialization = None
+    if is_excel(source):
+        with timer.measure("xlsx_normalization"):
+            workbook_materialization = materialize_ccr_comparison_workbook(
+                source,
+                cache_dir=out / "_cache",
+                purpose="backtesting-comparison",
+            )
+        source = workbook_materialization.path
     upstream = load_evidence(args.evidence)
     profile = load_profile(args.profile)
     profile = apply_metric_threshold_overrides(profile, args.threshold)
@@ -208,6 +220,8 @@ def main() -> int:
         list(profile.get("diagnostic_numeric_columns") or []),
     )
 
+    deal_families = summarize_deal_families(result["deal_impacts"])
+
     patterns = [
         {
             "dimension": "deal-concentration",
@@ -232,7 +246,11 @@ def main() -> int:
         "evidence_type": "backtesting-drilldown",
         "title": "CCR backtesting deal-level drilldown",
         "source": {
-            **file_metadata(source),
+            **file_metadata(original_source),
+            "normalized_table": str(source) if source != original_source else None,
+            "input_format": "xlsx" if workbook_materialization else "csv",
+            "workbook_sheets": workbook_materialization.sheets if workbook_materialization else None,
+            "workbook_cache_hit": workbook_materialization.cache_hit if workbook_materialization else None,
             "delimiter": layout.delimiter,
             "upstream_evidence": str(Path(args.evidence).resolve()),
         },
@@ -261,6 +279,7 @@ def main() -> int:
         "ref_test_change_patterns": deal_ref_test_changes,
         "comparison_flag_failures": deal_result_flag_failures,
         "secondary_numeric_diagnostics": deal_secondary_numeric,
+        "deal_family_patterns": deal_families,
         "impacted_dimensions": {
             **{k: sorted(v)[:50] for k, v in filters.items()},
             "Deal": [deal for deal, _ in ranked_deals[:50]],
@@ -270,6 +289,7 @@ def main() -> int:
         "filter_mapping": filter_mapping,
         "deal_derivation": deal_derivation,
     }
+    evidence["mtf00_eepe_relationship"] = mtf_eepe_relationship(upstream, backtesting=evidence)
     write_evidence(out / "backtesting_summary.json", evidence)
     _write_deals(out / "deal_impacts.csv", result["deal_impacts"])
     write_json(
@@ -281,13 +301,15 @@ def main() -> int:
             "ref_test_change_patterns": deal_ref_test_changes,
             "comparison_flag_failures": deal_result_flag_failures,
             "secondary_numeric_diagnostics": deal_secondary_numeric,
+            "deal_family_patterns": deal_families,
         },
     )
     (out / "agent_context.md").write_text(compact_agent_markdown(evidence), encoding="utf-8")
     write_json(
         out / "run_manifest.json",
         {
-            "input": file_metadata(source),
+            "input": file_metadata(original_source),
+            "normalized_table": str(source) if source != original_source else None,
             "upstream_evidence": str(Path(args.evidence).resolve()),
             "artifacts": ["backtesting_summary.json", "deal_impacts.csv", "backtesting_patterns.json", "agent_context.md"],
             "timings": timer.timings,

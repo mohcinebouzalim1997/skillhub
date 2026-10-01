@@ -4,13 +4,13 @@
   <div class="skill-meta-row">
     <span class="meta-pill">quant</span>
     <span class="meta-pill">reviewed</span>
-    <span class="meta-pill">v0.3.0</span>
+    <span class="meta-pill">v0.5.0</span>
     <span class="meta-pill">quality · 85/100</span>
     <span class="meta-pill">owner · ccr-quant</span>
   </div>
   <h1>Backtesting Drilldown</h1>
-  <p>Use compact upstream CVAR or GCVAR evidence to filter a much larger CCR backtesting comparison CSV early, derive DealId from the TRD segment of AggregationLevel when necessary, rank material deal contributors by Pareto coverage, and return only compact evidence.</p>
-  <div class="skill-tags"><span class="skill-tag">ccr</span> <span class="skill-tag">backtesting</span> <span class="skill-tag">deal</span> <span class="skill-tag">csv</span> <span class="skill-tag">performance</span> <span class="skill-tag">regression</span> <span class="skill-tag">trd</span> <span class="skill-tag">pareto</span></div>
+  <p>Use compact CVAR/GCVAR evidence to filter a much larger three-sheet CCR backtesting workbook by impacted Legal Entity, derive TRD deal IDs, rank the deals explaining material MTF00/EEPE movement, classify deal families, and return only compact deal-level evidence.</p>
+  <div class="skill-tags"><span class="skill-tag">ccr</span> <span class="skill-tag">backtesting</span> <span class="skill-tag">deal</span> <span class="skill-tag">xlsx</span> <span class="skill-tag">csv</span> <span class="skill-tag">performance</span> <span class="skill-tag">regression</span> <span class="skill-tag">trd</span> <span class="skill-tag">pareto</span></div>
   <div class="hero-actions">
     <button class="sh-button primary skill-local-action" type="button" data-skill-action data-skill-id="backtesting-drilldown">Install</button>
     <button class="sh-button secondary" type="button" data-copy-text="skillhub install backtesting-drilldown --check-deps">Copy CLI install</button>
@@ -54,16 +54,10 @@ skillhub run backtesting-drilldown -- <arguments>
 
 ## Examples
 
-### Drill CVAR impact into backtesting deals
+### Drill CVAR workbook impact into backtesting deals
 
 ```powershell
-skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis
-```
-
-### Use 80 percent deal coverage
-
-```powershell
-skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis --coverage 0.8
+skillhub run backtesting-drilldown -- --input Backtesting.xlsx --evidence cvar-analysis/summary.json --output bt-analysis
 ```
 
 ## Trust & package contract
@@ -71,13 +65,13 @@ skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-an
 | Attribute | Value |
 | --- | --- |
 | Skill ID | `backtesting-drilldown` |
-| Version | `0.3.0` |
+| Version | `0.5.0` |
 | Verification | `reviewed` |
 | Reviewed by | SkillHub maintainers |
 | Last reviewed | 2026-09-30 |
 | Quality/completeness | **85/100** |
 | Owner | ccr-quant |
-| Full package estimate | ~4,877 tokens |
+| Full package estimate | ~5,405 tokens |
 | Aliases | deal drilldown, backtesting impact, ccr deal contributors, trd drilldown |
 
 ### Runtime
@@ -106,7 +100,7 @@ skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-an
 | Type | Requirement |
 | --- | --- |
 | commands | — |
-| python | — |
+| python | `openpyxl>=3.1,<4` |
 | skills | `analyze-large-result-diff` |
 
 ### Recommended acceleration dependencies
@@ -117,12 +111,12 @@ skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-an
 
 ## Latest changelog
 
-## 0.3.0 — 2026-09-30
+## 0.5.0 — 2026-10-01
 
-- Added native-currency-aware MTF00 deal concentration and 50/80/90/95% contributor-count diagnostics.
-- Added a second selective pass over only chosen deals for Ref/Test, Result, RWA and ratio diagnostics.
-- Preserved fast upstream Legal Entity filtering and `/TRD:<DEAL_ID>` extraction from backtesting AggregationLevel.
-- Added multi-currency and selected-deal regression tests.
+- Added three-sheet XLSX backtesting normalization and cache reuse.
+- Added deal-family classification: no prefix=Equity DPS, `ELI-`=Equity, other explicit prefix=FIC.
+- Added MTF00↔EEPE selected-deal overlap routing and retained native-currency MTF00 separation.
+- Updated the skill contract around Legal Entity-first filtering of very large backtesting workbooks.
 
 ## Canonical skill instructions
 
@@ -130,47 +124,68 @@ skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-an
 
 # Backtesting Drilldown
 
-Use this skill **after** `analyze-large-result-diff` has narrowed a CVAR/GCVAR regression to impacted business dimensions.
+Use this skill **after** `analyze-large-result-diff` has identified material CVAR/GCVAR impacts.
 
-## Real CCR backtesting structure
+## Workbook contract
 
-The compare file has essentially the same Ref/Test/Gap schema as CVAR/GCVAR, but `AggregationLevel` is deal-grained. When there is no dedicated deal column, the tool derives:
+Backtesting result workbooks use the same three-sheet comparison semantics:
+
+- `Details` — present in both Ref and Test;
+- `Non Ref` — Test/candidate only;
+- `Non Test` — Ref/production only.
+
+The compare columns are broadly the same as CVAR/GCVAR, but `AggregationLevel` is more deal-grained and typically contains:
 
 ```text
-/LegalEntity:.../TRD:<DEAL_ID>
-                       ^^^^^^^
+/LegalEntity:<LE>/.../TRD:<DEAL_ID>/...
 ```
 
-into canonical `DealId`.
+The tool derives canonical `DealId` from the `TRD:` segment when no explicit deal column exists.
 
-Because CVAR/GCVAR aggregation levels and backtesting `TRD:` aggregation levels are **not the same grain**, the default early filter uses impacted `LegalEntity` values rather than exact upstream `AggregationLevel` strings.
+## Performance rule
 
-## Core rule
+Do **not** analyze the whole backtesting workbook semantically. The upstream CVAR/GCVAR evidence already tells us which Legal Entities matter.
 
-Do not globally materialize or send the huge backtesting CSV to the LLM. Filter early using upstream evidence, aggregate by deal, then keep only material deal contributors.
+The tool therefore:
 
-Default materiality is strict `abs(gap) > 10,000`, with 90% absolute-impact coverage per metric. MTF00 and EEPE contributions are ranked independently. For native-currency MTF00, coverage/concentration is also separated by currency; EUR and USD deal gaps are never added into a fake common total.
+1. normalizes/caches the workbook once;
+2. filters rows to impacted Legal Entities as early as possible;
+3. aggregates material gaps by deal;
+4. keeps only deals required to explain the configured coverage;
+5. performs a second enrichment pass only for selected deals.
+
+The raw workbook never enters LLM context.
+
+## Deal families
+
+The current CCR convention is encoded directly:
+
+- no explicit alphabetic prefix => `equity_dps`;
+- `ELI-...` => `equity`;
+- any other explicit prefix (`IRD-`, `TQE-`, etc.) => `fic`.
+
+The output reports both individual deals and family concentration, which helps distinguish one-off trade effects from systematic product-family effects.
+
+## Materiality
+
+- strict `abs(Mtf00 Gap) > 10,000` in native currency;
+- strict `abs(EepeInEur Gap) > 10,000 EUR`;
+- 90% absolute-impact coverage by default;
+- MTF00 contribution/coverage remains separated by currency.
 
 ## Run
 
 ```powershell
 skillhub run backtesting-drilldown -- `
-  --input <backtesting-comparison.csv> `
-  --evidence <cvar-analysis/summary.json> `
-  --output <backtesting-analysis>
+  --input "C:\jobs\Backtesting.xlsx" `
+  --evidence "C:\work\release\cvar\summary.json" `
+  --coverage 0.90 `
+  --output "C:\work\release\cvar-backtesting"
 ```
 
 The same command works with GCVAR evidence.
 
-After deal ranking, the tool performs a **selected-deal diagnostic pass** over only the retained deals and only useful Ref/Test/Result/Gap/Ratio columns. This surfaces maturity/RWA/currency/cash-flow clues without materializing the whole backtesting file.
-
-Optional policy override:
-
-```powershell
---coverage 0.8
-```
-
-If a future schema exposes an explicit deal field:
+If the schema exposes an explicit deal field:
 
 ```powershell
 --deal-column TradeInternalId
@@ -178,21 +193,25 @@ If a future schema exposes an explicit deal field:
 
 ## Outputs
 
-- `backtesting_summary.json`;
-- `deal_impacts.csv`;
-- `backtesting_patterns.json`;
-- `agent_context.md`;
-- `run_manifest.json`.
+- `backtesting_summary.json` — compact deal evidence;
+- `deal_impacts.csv` — selected material deal contributors only;
+- `backtesting_patterns.json` — concentration, family and selected-deal diagnostics;
+- `agent_context.md` — compact LLM handoff;
+- `run_manifest.json` — source/cache/timing metadata.
 
 ## Reasoning contract
 
-The agent should use this output to answer:
+Use the output to answer:
 
-- Which Legal Entities from CVAR/GCVAR remain impacted at deal level?
-- Which deals explain 80/90% of the material movement?
-- Is the effect concentrated in one/few deals or distributed (including how many deals explain 50/80/90/95%)?
-- Are positive and negative effects offsetting inside a deal?
-- Which deal IDs should be carried into root-cause / PR investigation?
+- Which impacted Legal Entities survive at deal level?
+- Which deals explain 50/80/90/95% of movement?
+- Is the movement concentrated or distributed?
+- Are the same deals/families driving both MTF00 and EEPE?
+- Are positive/negative contributions cancelling?
+- Do selected deals share Ref/Test changes such as effective maturity, RWA factor, currency or cash-flow behavior?
+- Which exact deals/netting sets should be checked against `ErrorByTrade.xlsx` and later code/PR changes?
+
+Deal concentration is evidence about mechanism, not proof of code causality.
 
 ---
 
@@ -200,10 +219,10 @@ The agent should use this output to answer:
 
 | File | Size | Estimated tokens |
 | --- | ---: | ---: |
-| `CHANGELOG.md` | 885 B | ~221 |
-| `SKILL.md` | 2,711 B | ~678 |
+| `CHANGELOG.md` | 1,279 B | ~318 |
+| `SKILL.md` | 3,309 B | ~824 |
 | `examples/usage.md` | 146 B | ~37 |
 | `references/method.md` | 254 B | ~64 |
-| `scripts/drilldown.py` | 14,229 B | ~3,558 |
-| `skillhub.yaml` | 1,189 B | ~298 |
+| `scripts/drilldown.py` | 15,520 B | ~3,880 |
+| `skillhub.yaml` | 1,041 B | ~261 |
 | `tests/README.md` | 83 B | ~21 |

@@ -124,3 +124,13 @@ diagnostic_columns:
 - Eepe Gap
 - Eepe Ratio
 - EepeInEur Ratio
+workbook:
+  required_sheets:
+  - Details
+  - Non Ref
+  - Non Test
+  sheet_roles:
+    Details: matched
+    Non Ref: test_only
+    Non Test: ref_only
+  derive_side_only_gaps: true

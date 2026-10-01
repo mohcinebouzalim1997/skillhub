@@ -34,6 +34,9 @@ dimension_candidates:
 - Currency (Test)
 - Currency (Ref)
 - Currency
+- WorkbookSheet
+- PresenceState
+- IsStructuralChange
 selection:
   top_k: 50
 patterns:
@@ -102,3 +105,15 @@ currency_columns:
   - Currency (Result)
   mtf00_threshold_semantics: 10000 in the row currency (for example EUR or USD)
   eepe_in_eur_threshold_semantics: 10000 EUR
+workbook:
+  required_sheets:
+  - Details
+  - Non Ref
+  - Non Test
+  sheet_roles:
+    Details: matched
+    Non Ref: test_only
+    Non Test: ref_only
+  non_ref_semantics: present in Test/candidate but absent in Ref/production
+  non_test_semantics: present in Ref/production but absent in Test/candidate
+  derive_side_only_gaps: true

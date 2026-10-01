@@ -9,35 +9,51 @@ Find the capability you need, inspect what it can execute/access, and install it
 <div data-marketplace>
   <div class="marketplace-toolbar">
     <input class="marketplace-search" data-skill-search type="search" autocomplete="off" placeholder="Search: PR regression, release/26.10, commit diff, EEPE jump, GitHub…">
-    <div class="marketplace-count" data-skill-count>6 skills</div>
+    <div class="marketplace-count" data-skill-count>7 skills</div>
   </div>
-  <div class="filter-row"><button class="filter-chip active" data-skill-filter="all">All</button><button class="filter-chip" data-skill-filter="data-analysis">data-analysis · 1</button><button class="filter-chip" data-skill-filter="engineering">engineering · 1</button><button class="filter-chip" data-skill-filter="quant">quant · 3</button><button class="filter-chip" data-skill-filter="quant-investigation">quant-investigation · 1</button></div>
-  <div class="skill-grid"><article class="skill-card" data-skill-card data-skill-id="analyze-large-result-diff" data-category="quant" data-search="Analyze Large Result Diff Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM. quant ccr cvar gcvar csv performance regression eepe mtf pareto coverage large csv impact cvar impact analyzer gcvar impact analyzer metric gap reducer ccr compare analyzer">
+  <div class="filter-row"><button class="filter-chip active" data-skill-filter="all">All</button><button class="filter-chip" data-skill-filter="ccr">ccr · 1</button><button class="filter-chip" data-skill-filter="data-analysis">data-analysis · 1</button><button class="filter-chip" data-skill-filter="engineering">engineering · 1</button><button class="filter-chip" data-skill-filter="quant">quant · 3</button><button class="filter-chip" data-skill-filter="quant-investigation">quant-investigation · 1</button></div>
+  <div class="skill-grid"><article class="skill-card" data-skill-card data-skill-id="analyze-ccr-errors" data-category="ccr" data-search="Analyze CCR Errors Correlate selected CVAR/GCVAR or backtesting impacts with three-sheet ErrorByTrade XLSX asymmetries, quantify links separately for MTF00 and EEPE scopes, classify error/deal patterns, and return compact evidence without exposing the raw workbook to the LLM. ccr ccr cvar gcvar errors backtesting release-validation">
+  <div class="skill-card-top">
+    <span class="skill-badge">ccr</span>
+    <span class="skill-badge reviewed">reviewed</span>
+  </div>
+  <h3><a href="skills/analyze-ccr-errors/">Analyze CCR Errors</a></h3>
+  <p>Correlate selected CVAR/GCVAR or backtesting impacts with three-sheet ErrorByTrade XLSX asymmetries, quantify links separately for MTF00 and EEPE scopes, classify error/deal patterns, and return compact evidence without exposing the raw workbook to the LLM.</p>
+  <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">cvar</span><span class="skill-tag">gcvar</span><span class="skill-tag">errors</span><span class="skill-tag">backtesting</span></div>
+  <div class="skill-quality"><span>Quality</span><strong>80/100</strong><div class="quality-bar"><i style="width:80%"></i></div></div>
+  <div class="skill-card-meta"><span>v0.2.0</span><span>python</span><span>~5,527 tok</span></div>
+  <div class="skill-card-actions">
+    <a class="primary" href="skills/analyze-ccr-errors/">Open</a>
+    <button class="skill-copy" type="button" data-copy-text="skillhub install analyze-ccr-errors">Copy install</button>
+    <button class="skill-local-action" type="button" data-skill-action data-skill-id="analyze-ccr-errors">Install</button>
+  </div>
+</article>
+<article class="skill-card" data-skill-card data-skill-id="analyze-large-result-diff" data-category="quant" data-search="Analyze Large Result Diff Reduce a very large three-sheet CCR result workbook (CVAR/GCVAR) or compatible CSV into compact evidence by normalizing Details, Non Ref and Non Test, selecting material MTF00/EEPE impacts by strict threshold and Pareto coverage, enriching only selected impacts, and keeping raw rows out of LLM context. quant ccr cvar gcvar xlsx csv performance regression eepe mtf pareto coverage large xlsx impact large csv impact cvar impact analyzer gcvar impact analyzer metric gap reducer ccr compare analyzer">
   <div class="skill-card-top">
     <span class="skill-badge">quant</span>
     <span class="skill-badge reviewed">reviewed</span>
   </div>
   <h3><a href="skills/analyze-large-result-diff/">Analyze Large Result Diff</a></h3>
-  <p>Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM.</p>
-  <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">cvar</span><span class="skill-tag">gcvar</span><span class="skill-tag">csv</span><span class="skill-tag">performance</span></div>
+  <p>Reduce a very large three-sheet CCR result workbook (CVAR/GCVAR) or compatible CSV into compact evidence by normalizing Details, Non Ref and Non Test, selecting material MTF00/EEPE impacts by strict threshold and Pareto coverage, enriching only selected impacts, and keeping raw rows out of LLM context.</p>
+  <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">cvar</span><span class="skill-tag">gcvar</span><span class="skill-tag">xlsx</span><span class="skill-tag">csv</span></div>
   <div class="skill-quality"><span>Quality</span><strong>85/100</strong><div class="quality-bar"><i style="width:85%"></i></div></div>
-  <div class="skill-card-meta"><span>v0.3.0</span><span>python</span><span>~5,394 tok</span></div>
+  <div class="skill-card-meta"><span>v0.5.0</span><span>python</span><span>~5,909 tok</span></div>
   <div class="skill-card-actions">
     <a class="primary" href="skills/analyze-large-result-diff/">Open</a>
     <button class="skill-copy" type="button" data-copy-text="skillhub install analyze-large-result-diff">Copy install</button>
     <button class="skill-local-action" type="button" data-skill-action data-skill-id="analyze-large-result-diff">Install</button>
   </div>
 </article>
-<article class="skill-card" data-skill-card data-skill-id="backtesting-drilldown" data-category="quant" data-search="Backtesting Drilldown Use compact upstream CVAR or GCVAR evidence to filter a much larger CCR backtesting comparison CSV early, derive DealId from the TRD segment of AggregationLevel when necessary, rank material deal contributors by Pareto coverage, and return only compact evidence. quant ccr backtesting deal csv performance regression trd pareto deal drilldown backtesting impact ccr deal contributors trd drilldown">
+<article class="skill-card" data-skill-card data-skill-id="backtesting-drilldown" data-category="quant" data-search="Backtesting Drilldown Use compact CVAR/GCVAR evidence to filter a much larger three-sheet CCR backtesting workbook by impacted Legal Entity, derive TRD deal IDs, rank the deals explaining material MTF00/EEPE movement, classify deal families, and return only compact deal-level evidence. quant ccr backtesting deal xlsx csv performance regression trd pareto deal drilldown backtesting impact ccr deal contributors trd drilldown">
   <div class="skill-card-top">
     <span class="skill-badge">quant</span>
     <span class="skill-badge reviewed">reviewed</span>
   </div>
   <h3><a href="skills/backtesting-drilldown/">Backtesting Drilldown</a></h3>
-  <p>Use compact upstream CVAR or GCVAR evidence to filter a much larger CCR backtesting comparison CSV early, derive DealId from the TRD segment of AggregationLevel when necessary, rank material deal contributors by Pareto coverage, and return only compact evidence.</p>
-  <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">backtesting</span><span class="skill-tag">deal</span><span class="skill-tag">csv</span><span class="skill-tag">performance</span></div>
+  <p>Use compact CVAR/GCVAR evidence to filter a much larger three-sheet CCR backtesting workbook by impacted Legal Entity, derive TRD deal IDs, rank the deals explaining material MTF00/EEPE movement, classify deal families, and return only compact deal-level evidence.</p>
+  <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">backtesting</span><span class="skill-tag">deal</span><span class="skill-tag">xlsx</span><span class="skill-tag">csv</span></div>
   <div class="skill-quality"><span>Quality</span><strong>85/100</strong><div class="quality-bar"><i style="width:85%"></i></div></div>
-  <div class="skill-card-meta"><span>v0.3.0</span><span>python</span><span>~4,877 tok</span></div>
+  <div class="skill-card-meta"><span>v0.5.0</span><span>python</span><span>~5,405 tok</span></div>
   <div class="skill-card-actions">
     <a class="primary" href="skills/backtesting-drilldown/">Open</a>
     <button class="skill-copy" type="button" data-copy-text="skillhub install backtesting-drilldown">Copy install</button>
@@ -78,16 +94,16 @@ Find the capability you need, inspect what it can execute/access, and install it
     <button class="skill-local-action" type="button" data-skill-action data-skill-id="investigate-metric-jump">Install</button>
   </div>
 </article>
-<article class="skill-card" data-skill-card data-skill-id="prepare-ccr-release-evidence" data-category="quant" data-search="Prepare CCR Release Evidence Orchestrate the deterministic data-reduction part of CCR release validation: reduce CVAR and GCVAR compare CSVs, drill only impacted Legal Entities into huge backtesting CSVs, build one compact LLM handoff, and optionally prefetch reusable release-PR forensic candidates. quant ccr release cvar gcvar backtesting workflow evidence pr-forensics prepare ccr release validate ccr release data ccr release evidence">
+<article class="skill-card" data-skill-card data-skill-id="prepare-ccr-release-evidence" data-category="quant" data-search="Prepare CCR Release Evidence Orchestrate the deterministic CCR release-validation data plane from CVAR/GCVAR result XLSX workbooks, deal-level backtesting workbooks and ErrorByTrade workbooks; investigate CVAR MTF00 then EEPE, reuse CVAR evidence for mirrored GCVAR issues, and optionally prefetch reusable PR-forensics candidates while keeping raw workbooks out of LLM context. quant ccr release cvar gcvar backtesting xlsx errors workflow evidence pr-forensics prepare ccr release validate ccr release data ccr release evidence">
   <div class="skill-card-top">
     <span class="skill-badge">quant</span>
     <span class="skill-badge reviewed">reviewed</span>
   </div>
   <h3><a href="skills/prepare-ccr-release-evidence/">Prepare CCR Release Evidence</a></h3>
-  <p>Orchestrate the deterministic data-reduction part of CCR release validation: reduce CVAR and GCVAR compare CSVs, drill only impacted Legal Entities into huge backtesting CSVs, build one compact LLM handoff, and optionally prefetch reusable release-PR forensic candidates.</p>
+  <p>Orchestrate the deterministic CCR release-validation data plane from CVAR/GCVAR result XLSX workbooks, deal-level backtesting workbooks and ErrorByTrade workbooks; investigate CVAR MTF00 then EEPE, reuse CVAR evidence for mirrored GCVAR issues, and optionally prefetch reusable PR-forensics candidates while keeping raw workbooks out of LLM context.</p>
   <div class="skill-tags"><span class="skill-tag">ccr</span><span class="skill-tag">release</span><span class="skill-tag">cvar</span><span class="skill-tag">gcvar</span><span class="skill-tag">backtesting</span></div>
   <div class="skill-quality"><span>Quality</span><strong>80/100</strong><div class="quality-bar"><i style="width:80%"></i></div></div>
-  <div class="skill-card-meta"><span>v0.2.0</span><span>python</span><span>~5,102 tok</span></div>
+  <div class="skill-card-meta"><span>v0.4.0</span><span>python</span><span>~7,733 tok</span></div>
   <div class="skill-card-actions">
     <a class="primary" href="skills/prepare-ccr-release-evidence/">Open</a>
     <button class="skill-copy" type="button" data-copy-text="skillhub install prepare-ccr-release-evidence">Copy install</button>

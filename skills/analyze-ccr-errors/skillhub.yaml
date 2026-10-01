@@ -1,0 +1,34 @@
+id: analyze-ccr-errors
+version: 0.2.0
+title: Analyze CCR Errors
+category: ccr
+subcategory: release-validation
+description: Correlate material CCR impacts with asymmetric ErrorByTrade Ref/Test
+  errors using the three-sheet compare convention.
+tags:
+- ccr
+- cvar
+- gcvar
+- errors
+- backtesting
+- release-validation
+status: reviewed
+owner: ccr-quant
+runtime:
+  python: '>=3.10'
+entrypoints:
+  default: scripts/analyze_errors.py
+dependencies:
+  python:
+  - openpyxl>=3.1,<4
+permissions:
+  filesystem: read-write-artifacts
+  network: false
+compatibility:
+  github-copilot: full
+  github-copilot-cli: full
+  microsoft-copilot: export-only
+verification:
+  level: reviewed
+  reviewed_by: SkillHub maintainers
+  last_reviewed: '2026-10-01'

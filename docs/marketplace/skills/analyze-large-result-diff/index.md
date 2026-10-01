@@ -4,13 +4,13 @@
   <div class="skill-meta-row">
     <span class="meta-pill">quant</span>
     <span class="meta-pill">reviewed</span>
-    <span class="meta-pill">v0.3.0</span>
+    <span class="meta-pill">v0.5.0</span>
     <span class="meta-pill">quality · 85/100</span>
     <span class="meta-pill">owner · ccr-quant</span>
   </div>
   <h1>Analyze Large Result Diff</h1>
-  <p>Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM.</p>
-  <div class="skill-tags"><span class="skill-tag">ccr</span> <span class="skill-tag">cvar</span> <span class="skill-tag">gcvar</span> <span class="skill-tag">csv</span> <span class="skill-tag">performance</span> <span class="skill-tag">regression</span> <span class="skill-tag">eepe</span> <span class="skill-tag">mtf</span> <span class="skill-tag">pareto</span> <span class="skill-tag">coverage</span></div>
+  <p>Reduce a very large three-sheet CCR result workbook (CVAR/GCVAR) or compatible CSV into compact evidence by normalizing Details, Non Ref and Non Test, selecting material MTF00/EEPE impacts by strict threshold and Pareto coverage, enriching only selected impacts, and keeping raw rows out of LLM context.</p>
+  <div class="skill-tags"><span class="skill-tag">ccr</span> <span class="skill-tag">cvar</span> <span class="skill-tag">gcvar</span> <span class="skill-tag">xlsx</span> <span class="skill-tag">csv</span> <span class="skill-tag">performance</span> <span class="skill-tag">regression</span> <span class="skill-tag">eepe</span> <span class="skill-tag">mtf</span> <span class="skill-tag">pareto</span> <span class="skill-tag">coverage</span></div>
   <div class="hero-actions">
     <button class="sh-button primary skill-local-action" type="button" data-skill-action data-skill-id="analyze-large-result-diff">Install</button>
     <button class="sh-button secondary" type="button" data-copy-text="skillhub install analyze-large-result-diff --check-deps">Copy CLI install</button>
@@ -54,22 +54,16 @@ skillhub run analyze-large-result-diff -- <arguments>
 
 ## Examples
 
-### CVAR with production defaults
+### CVAR workbook
 
 ```powershell
-skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar
+skillhub run analyze-large-result-diff -- --profile cvar --input CcrMetrics.xlsx --output out/cvar
 ```
 
-### CVAR with 80 percent impact coverage
+### GCVAR workbook
 
 ```powershell
-skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar --coverage 0.8
-```
-
-### GCVAR with an overridden threshold
-
-```powershell
-skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --output out/gcvar --threshold "EepeInEur Gap=25000"
+skillhub run analyze-large-result-diff -- --profile gcvar --input CcrMetrics_Gcvar.xlsx --output out/gcvar
 ```
 
 ## Trust & package contract
@@ -77,14 +71,14 @@ skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --ou
 | Attribute | Value |
 | --- | --- |
 | Skill ID | `analyze-large-result-diff` |
-| Version | `0.3.0` |
+| Version | `0.5.0` |
 | Verification | `reviewed` |
 | Reviewed by | SkillHub maintainers |
 | Last reviewed | 2026-09-30 |
 | Quality/completeness | **85/100** |
 | Owner | ccr-quant |
-| Full package estimate | ~5,394 tokens |
-| Aliases | large csv impact, cvar impact analyzer, gcvar impact analyzer, metric gap reducer, ccr compare analyzer |
+| Full package estimate | ~5,909 tokens |
+| Aliases | large xlsx impact, large csv impact, cvar impact analyzer, gcvar impact analyzer, metric gap reducer, ccr compare analyzer |
 
 ### Runtime
 
@@ -112,7 +106,7 @@ skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --ou
 | Type | Requirement |
 | --- | --- |
 | commands | — |
-| python | — |
+| python | `openpyxl>=3.1,<4` |
 | skills | — |
 
 ### Recommended acceleration dependencies
@@ -123,14 +117,12 @@ skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --ou
 
 ## Latest changelog
 
-## 0.3.0 — 2026-09-30
+## 0.5.0 — 2026-10-01
 
-- Added native-currency-aware MTF00 Pareto selection: EUR/USD (and any other observed currency) are covered independently rather than summed.
-- Added top-1/top-3/top-10, HHI/effective-contributor, cancellation, threshold-capture and 50/80/90/95% contributor-count diagnostics.
-- Added selected-row secondary numeric diagnostics for MTF/EEPE/RWA gaps and ratios.
-- Added robust percentage parsing for ratio fields exported as `0.25%` or parenthesized negatives.
-- Calibrated dimensions and Ref/Test/Result clues to the supplied CVAR/GCVAR compare layout.
-- Added aggregation-path shape diagnostics (for example `LegalEntity>Master`) and explicit selected AggregationLevel reporting without treating high-cardinality IDs as categorical patterns.
+- Switched the primary CCR contract from flat CSV assumptions to three-sheet XLSX result workbooks (`Details`, `Non Ref`, `Non Test`).
+- Added read-only XLSX normalization/cache with structural Test-only/Ref-only signed gap derivation.
+- Preserved the compact evidence contract so agents never need raw workbook rows.
+- Kept CSV compatibility for generic/legacy use while documenting XLSX as the production CCR path.
 
 ## Canonical skill instructions
 
@@ -138,42 +130,71 @@ skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --ou
 
 # Analyze Large Result Diff
 
-Use this skill whenever an agent receives a huge comparison CSV and must find only the material changes without placing the raw file in model context.
+Use this skill whenever an agent must understand a large CVAR/GCVAR comparison without asking the LLM to read `CcrMetrics.xlsx` / `CcrMetrics_Gcvar.xlsx` directly.
 
 ## Core rule
 
-**Never ask the LLM to read the raw CSV.** Run this deterministic analyzer and reason over `summary.json` / `agent_context.md`.
+**The workbook is a deterministic-tool input, never normal LLM context.** The tool emits `summary.json` and `agent_context.md`; agents reason over those compact artifacts.
 
-## Real CCR compare-file defaults
+## CCR workbook contract
 
-The CVAR and GCVAR profiles understand both compact and real exported headers, including:
+The production compare workbooks are Excel files with three semantic sheets:
 
-- `Mtf00 Gap` / `Mtf00Gap` / `mtf00Gap` → canonical evidence metric `Mtf00Gap`;
-- `EepeInEur Gap` / `EepeInEurGap` → canonical evidence metric `EepeInEurGap`;
+- `Details` — aggregation levels present in both Ref/production and Test/candidate;
+- `Non Ref` — present only in Test/candidate;
+- `Non Test` — present only in Ref/production.
+
+The tool streams all three sheets into one cached normalized table. It adds:
+
+- `WorkbookSheet`;
+- `PresenceState = matched | test_only | ref_only`;
+- `IsStructuralChange`.
+
+For side-only rows, when an explicit gap is absent, the tool derives a signed structural gap:
+
+- Test-only / `Non Ref` => `+Test` value;
+- Ref-only / `Non Test` => `-Ref` value.
+
+This means additions/removals participate in materiality and Pareto coverage rather than disappearing from analysis.
+
+CSV remains supported for backward compatibility and testing, but XLSX is the primary CCR input.
+
+## Real CCR defaults
+
+The CVAR and GCVAR profiles resolve real compare headers such as:
+
 - `LegalEntity`;
 - `AggregationLevel`;
-- Ref/Test pairs such as `EffectiveMaturity (Ref)` and `EffectiveMaturity (Test)`;
-- compare-result flags such as `Currency (Result)` and `CashFlowType (Result)`.
+- `Mtf00 (Ref)` / `Mtf00 (Test)` / `Mtf00 Gap`;
+- `EepeInEur (Ref)` / `EepeInEur (Test)` / `EepeInEur Gap`;
+- `Eepe`, `Rwa`, ratios, `EffectiveMaturity`, `RiskWeightedExposureFactor`;
+- `(Result)` flags such as currency/cash-flow comparisons.
 
-Default CCR materiality is **strict `abs(gap) > 10,000`**. A value exactly equal to 10,000 is not a material gap.
+Primary materiality is deliberately narrow:
 
-After thresholding, the default selector keeps the smallest set of the largest rows required to explain **90% of absolute material movement per metric**. Override that to 80%, for example, with `--coverage 0.8`.
+- strict `abs(Mtf00 Gap) > 10,000` in the row currency;
+- strict `abs(EepeInEur Gap) > 10,000 EUR`.
 
-CVAR and GCVAR use the same generic implementation; only profiles/configuration differ.
+Exactly `10,000` is **not** material.
 
-### Currency-aware MTF00 coverage
+After thresholding, the default selector keeps the smallest set of the largest contributors required to explain **90% of absolute material movement**. Use `--coverage 0.8` for 80%.
 
-`Mtf00 Gap` is in the row currency (`Currency (Test)` / `Currency (Ref)`). A 10k EUR gap and a 10k USD gap are both material, but their raw amounts are **not additive**. When multiple currencies occur, the analyzer computes 80/90% Pareto coverage independently per currency and unions the selected rows. It deliberately suppresses fake cross-currency HHI/top-share/net-gross statistics.
+### Currency-aware MTF00
 
-`EepeInEur Gap` is already EUR-denominated, so its coverage is computed globally.
+`Mtf00 Gap` is native-currency. EUR and USD values must never be added into a fake common total. Pareto coverage and concentration are computed independently per observed currency and the selected rows are unioned.
+
+`EepeInEur Gap` is EUR-normalized and can be analyzed globally.
 
 ## Run
+
+CVAR:
 
 ```powershell
 skillhub run analyze-large-result-diff -- `
   --profile cvar `
-  --input <cvar-comparison.csv> `
-  --output <analysis-dir>
+  --input "C:\jobs\CcrMetrics.xlsx" `
+  --coverage 0.90 `
+  --output "C:\work\release\cvar"
 ```
 
 GCVAR:
@@ -181,8 +202,9 @@ GCVAR:
 ```powershell
 skillhub run analyze-large-result-diff -- `
   --profile gcvar `
-  --input <gcvar-comparison.csv> `
-  --output <analysis-dir>
+  --input "C:\jobs\CcrMetrics_Gcvar.xlsx" `
+  --coverage 0.90 `
+  --output "C:\work\release\gcvar"
 ```
 
 Optional policy overrides:
@@ -193,39 +215,42 @@ Optional policy overrides:
 --threshold "EepeInEur Gap=25000"
 ```
 
-For maximum throughput install Polars (`pip install -e ".[fastcsv]"`). A bounded-memory Python streaming fallback remains available on locked-down machines.
+For the high-throughput normalized-table scan install the CCR extra (`pip install -e ".[ccr]"`), which enables Polars. Excel ingestion itself uses `openpyxl` in read-only mode and is cached, so repeated investigations avoid re-reading the workbook.
 
 ## Algorithm
 
-1. Inspect only the CSV header.
-2. Resolve canonical metrics to actual file headers/aliases.
-3. First pass: project identifiers/dimensions plus the two gap columns only.
-4. Apply strict materiality (`|gap| > threshold`).
-5. Track total absolute material movement per metric.
-6. Keep bounded top candidates and retain only the largest rows required for the configured impact-coverage target.
-7. Second pass: enrich only those selected rows with the other compare columns.
-8. Detect patterns by both row frequency **and absolute impact contribution**.
-9. Compute concentration diagnostics: top-1/top-3/top-10 shares, HHI/effective contributor count, net-vs-gross cancellation, and contributor counts required for 50/80/90/95% of material movement.
-10. Summarize secondary compare diagnostics (RWA gap/ratio, EEPE gap/ratio, MTF/EEPE ratios) only on selected rows.
-11. Compare Ref/Test field pairs on the selected rows to expose clues such as maturity/model/input changes.
-12. Summarize `(Result)` comparison-flag failures and relationships between MTF00 and EEPE gaps.
-13. Emit small structured evidence plus an LLM-ready Markdown brief.
+1. Validate the three-sheet workbook contract.
+2. Stream `Details`, `Non Ref`, and `Non Test` once into a cached normalized table.
+3. Preserve structural side-only rows and derive missing signed gaps.
+4. Resolve canonical metrics and real header aliases.
+5. First analytical pass: project only identifiers/dimensions plus material gap columns.
+6. Apply strict `|gap| > threshold`.
+7. Measure total/gross/net/positive/negative material movement.
+8. Select the largest contributors required for the configured Pareto coverage.
+9. Compute top-1/top-3/top-10 shares, HHI/effective contributor count, cancellation, and contributor counts for 50/80/90/95% coverage.
+10. Second analytical pass: enrich only selected rows with Ref/Test/Result/ratio/RWA/maturity diagnostics.
+11. Detect Legal Entity, aggregation-shape, structural-sheet and Ref/Test-change patterns by frequency and impact contribution.
+12. Emit compact structured evidence plus an LLM-ready Markdown brief.
+
+The tool computes MTF00 and EEPE evidence in the same efficient scan, but the **agent reasoning order is MTF00 first, then EEPE**.
 
 ## Outputs
 
 - `summary.json` — canonical SkillHub evidence contract;
-- `material_impacts.csv` — selected material metric impacts only;
-- `patterns.json` — business concentration, Ref/Test changes, result-flag failures and metric relationships;
-- `agent_context.md` — deliberately small context for an LLM;
-- `run_manifest.json` — source metadata, policy and timings.
+- `material_impacts.csv` — only selected material contributors;
+- `patterns.json` — concentration, structural rows, Ref/Test changes and result-flag clues;
+- `agent_context.md` — deliberately compact LLM context;
+- `run_manifest.json` — source/workbook/cache metadata and timings.
 
 ## Interpretation rules
 
-- Positive and negative impacts are both important; absolute size controls selection.
-- MTF00 and EEPE are never summed together as if they shared units.
-- A Legal Entity can be important through contribution even if it appears in only a few rows.
+- Positive and negative impacts both matter; absolute size controls contributor selection.
+- MTF00 and EEPE are never summed together.
+- MTF00 amounts from different native currencies are never summed together.
+- `Non Ref` / `Non Test` are first-class structural changes, not noise.
+- A Legal Entity can be important through contribution even if it occurs in few rows.
 - Ref/Test changes are clues, not proof of root cause.
-- Threshold and 80/90% coverage are configuration, so release policy can evolve without changing code.
+- EEPE overlap with MTF00 is a routing clue only: other MTFs are not visible in this result workbook.
 
 ---
 
@@ -233,10 +258,10 @@ For maximum throughput install Polars (`pip install -e ".[fastcsv]"`). A bounded
 
 | File | Size | Estimated tokens |
 | --- | ---: | ---: |
-| `CHANGELOG.md` | 1,389 B | ~347 |
-| `SKILL.md` | 4,628 B | ~1,154 |
+| `CHANGELOG.md` | 1,832 B | ~457 |
+| `SKILL.md` | 5,426 B | ~1,353 |
 | `examples/usage.md` | 237 B | ~60 |
 | `references/method.md` | 301 B | ~76 |
-| `scripts/analyze.py` | 13,465 B | ~3,367 |
-| `skillhub.yaml` | 1,430 B | ~358 |
+| `scripts/analyze.py` | 14,454 B | ~3,614 |
+| `skillhub.yaml` | 1,267 B | ~317 |
 | `tests/README.md` | 128 B | ~32 |

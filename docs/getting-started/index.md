@@ -8,10 +8,10 @@ skillhub doctor
 skillhub validate
 ```
 
-For high-throughput large CSV analysis:
+For high-throughput CCR workbook analysis (fast scans after one-time XLSX normalization/cache):
 
 ```powershell
-pip install -e ".[fastcsv]"
+pip install -e ".[ccr]"
 ```
 
 Open the local marketplace:
@@ -26,6 +26,6 @@ To prepare the current CCR release-validation capability set:
 skillhub install-stack ccr-release-validation --check-deps
 ```
 
-This installs the reusable CSV/backtesting/PR skills plus the specialized CVAR, GCVAR and synthesis agents. Your product repositories remain untouched.
+This installs the reusable workbook/backtesting/error/PR skills plus the top-level CCR coordinator and specialized CVAR, GCVAR and synthesis agents. Your product repositories remain untouched.
 
 Read the [Project Guide](../project/PROJECT-GUIDE.md) before extending the CCR workflow.

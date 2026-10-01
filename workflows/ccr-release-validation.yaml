@@ -1,9 +1,9 @@
-schema_version: 2
+schema_version: 3
 id: ccr-release-validation
 name: CCR Release Validation
-description: Multi-agent workflow for validating a candidate CCR release against production
-  using CVAR and GCVAR compare-job evidence, targeted deal-level backtesting, and
-  reusable PR/code forensics when material impacts require explanation.
+description: Multi-agent validation of a candidate CCR release using XLSX-aware CVAR/GCVAR
+  result comparisons, deal-level backtesting, ErrorByTrade asymmetry analysis, and
+  reusable PR/code forensics.
 status: usable-today-explicit-orchestrated-handoff
 owner: ccr-quant
 release_naming:
@@ -15,117 +15,97 @@ materiality_policy:
   threshold_operator: gt
   default_absolute_threshold: 10000.0
   default_coverage_target: 0.9
-  configurable_coverage_examples:
-  - 0.8
-  - 0.9
   metrics:
   - Mtf00Gap
   - EepeInEurGap
-trigger_examples:
-- Validate candidate release release/26.10 against production release/26.9.
-- Validate the CCR release using the CVAR and GCVAR compare-job outputs and explain
-  material regressions.
+workbook_contract:
+  result_files:
+  - CcrMetrics.xlsx
+  - CcrMetrics_Gcvar.xlsx
+  sheets:
+    Details: present in both Ref and Test
+    Non Ref: present only in Test/candidate
+    Non Test: present only in Ref/production
+  error_file_pattern: ErrorByTrade.xlsx
+  structural_rows_are_material_candidates: true
 inputs:
   required:
   - production_ref
   - candidate_ref
-  - cvar_comparison_csv
-  - gcvar_comparison_csv
+  - cvar_result_workbook
   recommended:
-  - cvar_backtesting_csv
-  - gcvar_backtesting_csv
+  - cvar_backtesting_workbook
+  - cvar_error_workbook
+  - cvar_backtesting_error_workbook
+  - gcvar_result_workbook
+  - gcvar_backtesting_workbook
+  - gcvar_error_workbook
+  - gcvar_backtesting_error_workbook
   - repository
-  optional:
-  - coverage_target
-  - first_bad_date
-  - materiality_overrides
 agents:
+- id: ccr-release-validator
+  phase: coordinate
+  role: 'Today-facing coordinator: runs deterministic preparation from workbook paths
+    and follows the multi-agent workflow contract.'
 - id: ccr-cvar-release-validator
-  role: Reduce CVAR compare output, detect material impacts/patterns, and drill impacted
-    Legal Entities into backtesting deals.
-  phase: validate
+  phase: validate-cvar
+  role: Investigate CVAR MTF00 first, then EEPE, including deal attribution and errors.
 - id: ccr-gcvar-release-validator
-  role: Reduce GCVAR compare output, detect material impacts/patterns, and drill impacted
-    Legal Entities into backtesting deals.
-  phase: validate
+  phase: validate-gcvar
+  role: First test whether GCVAR mirrors CVAR; deep-dive only when needed.
 - id: ccr-release-validation-synthesizer
-  role: Combine compact validator evidence, explain shared/isolated patterns, and
-    use reusable PR forensics when code-level investigation is justified.
-  phase: synthesize
+  phase: root-cause-and-decision
+  role: Correlate data/errors/code, identify candidate PRs, and classify expected
+    change vs suspected bug vs inconclusive.
 skills:
 - prepare-ccr-release-evidence
 - analyze-large-result-diff
 - backtesting-drilldown
+- analyze-ccr-errors
 - release-pr-forensics
 execution:
-- stage: evidence-preparation
-  tool: prepare-ccr-release-evidence
-  inputs:
-  - cvar_comparison_csv
-  - cvar_backtesting_csv
-  - gcvar_comparison_csv
-  - gcvar_backtesting_csv
-  - production_ref
-  - candidate_ref
-  produces:
-  - workflow_context.md
-  - workflow_manifest.json
-  - pr_forensics_hints.json
-  note: Deterministic fast reduction. Raw CSVs stay outside LLM context.
-- stage: cvar-validation
+- stage: prepare-cvar
   agent: ccr-cvar-release-validator
-  inputs:
-  - cvar_comparison_csv
-  - cvar_backtesting_csv
-  may_run_in_parallel_with:
-  - gcvar-validation
-  produces:
-  - cvar/summary.json
-  - cvar/agent_context.md
-  - cvar-backtesting/backtesting_summary.json
-  - cvar-backtesting/agent_context.md
-- stage: gcvar-validation
+  order:
+  - cvar.mtf00
+  - cvar.backtesting.mtf00
+  - cvar.errors.mtf00
+  - cvar.eepe
+  - cvar.backtesting.eepe
+  - cvar.errors.eepe
+  - cvar.mtf00-eepe-link
+- stage: gcvar-precheck
   agent: ccr-gcvar-release-validator
-  inputs:
-  - gcvar_comparison_csv
-  - gcvar_backtesting_csv
-  may_run_in_parallel_with:
-  - cvar-validation
-  produces:
-  - gcvar/summary.json
-  - gcvar/agent_context.md
-  - gcvar-backtesting/backtesting_summary.json
-  - gcvar-backtesting/agent_context.md
-- stage: synthesis-root-cause
+  order:
+  - gcvar.result-signature
+  - compare-to-cvar
+  - deep-dive-only-if-needed
+- stage: synthesis
   agent: ccr-release-validation-synthesizer
-  consumes:
-  - cvar/summary.json
-  - cvar-backtesting/backtesting_summary.json
-  - gcvar/summary.json
-  - gcvar-backtesting/backtesting_summary.json
-  optional_skill_calls:
+  order:
+  - data-hypotheses
+  - error-explanation
   - release-pr-forensics
-  produces:
-  - ccr-release-validation-report
+  - selective-diff-inspection
+  - discriminating-test
+  - classification
 operating_rules:
-- Raw huge CSV files are local tool inputs only and never LLM context.
-- The strict materiality rule is abs(gap) > 10000; exactly 10000 is not material.
-- Coverage is calculated independently per metric from absolute material movement;
-  MTF00 and EEPE units are never mixed.
-- Backtesting is filtered first by impacted LegalEntity; its AggregationLevel is deal-grained
-  and DealId is derived from the TRD segment when necessary.
-- PR ranking is evidence for investigation, not proof of causality.
-- Mtf00Gap materiality is 10000 in the row currency. When multiple currencies are
-  present, Pareto coverage is computed independently per currency; native EUR/USD
-  amounts are never summed for concentration statistics.
-- EepeInEurGap is EUR-denominated and Pareto coverage is global across the file.
-- The compare schema contains useful secondary diagnostics (RWA gap/ratio, EEPE gap/ratio,
-  EffectiveMaturity and RiskWeightedExposureFactor Ref/Test changes, CashFlowType/Currency
-  result flags). These are explanation clues, not primary materiality triggers.
-notes:
-- The deterministic CVAR/GCVAR/backtesting data plane is calibrated to the provided
-  real compare-file screenshots.
-- Full production approval still benefits from a sanitized real CSV sample and one
-  historical known regression to verify exact values, edge cases and throughput.
-- Multi-agent automatic handoff depends on the GitHub Copilot environment; the same
-  workflow can be executed today with explicit validator then synthesizer handoff.
+- Raw XLSX/CSV files are local deterministic-tool inputs only, never normal LLM context.
+- Strict materiality is abs(gap) > 10000; exactly 10000 is not material.
+- MTF00 coverage is independent by native currency; EEPE-in-EUR coverage is global.
+- Backtesting filters impacted Legal Entities first and derives DealId from the TRD
+  segment.
+- Deal family convention: no prefix=Equity DPS, ELI-=Equity, other explicit prefix=FIC.
+- Error asymmetry on an impacted LE/deal is evidence, not automatic causality.
+- EEPE can share MTF00 root cause or be driven by other unseen MTFs / other factors.
+- GCVAR should reuse CVAR root-cause evidence when deterministic signature similarity
+  is high.
+- PR ranking is relevance evidence, not proof of causality.
+- Final material issue classification is expected_dev_change, suspected_bug, or inconclusive.
+today_use:
+  recommended_entry_agent: ccr-release-validator
+  execution_model: The coordinator runs prepare-ccr-release-evidence, then reasons
+    over compact artifacts. Specialized agents remain independently invocable and
+    become natural delegation targets when the enterprise agent platform supports
+    it.
+  raw_workbooks_in_llm_context: false

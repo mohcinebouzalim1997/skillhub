@@ -1,15 +1,16 @@
 schema_version: 1
 id: ccr-release-validation
 name: CCR Release Validation Stack
-description: Installs the reusable CCR validation skills and the specialized CVAR,
-  GCVAR and synthesis agents. The workflow specification remains centrally documented
-  in SkillHub.
+description: Installs the reusable CCR validation skills plus a top-level coordinator
+  and specialized CVAR, GCVAR and synthesis agents. Product repositories remain untouched.
 skills:
 - prepare-ccr-release-evidence
 - analyze-large-result-diff
 - backtesting-drilldown
+- analyze-ccr-errors
 - release-pr-forensics
 agents:
+- ccr-release-validator
 - ccr-cvar-release-validator
 - ccr-gcvar-release-validator
 - ccr-release-validation-synthesizer
@@ -19,5 +20,6 @@ external_dependencies:
   commands:
   - gh
 recommended_python:
+- openpyxl
 - polars
 workflow: ccr-release-validation

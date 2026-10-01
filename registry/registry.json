@@ -1,13 +1,14 @@
 {
   "schema_version": 2,
-  "skillhub_version": "0.1.0",
-  "generated_at": "2026-09-30T16:03:45.090545+00:00",
+  "skillhub_version": "0.2.0",
+  "generated_at": "2026-10-01T00:57:14.616034+00:00",
   "hub": {
     "name": "Quant SkillHub",
     "description": "A central, portable registry of trusted AI capabilities for quant, engineering and release investigation. Discover once, install personally, use from any repository without polluting it.\n",
     "default_token_budget": 6000
   },
   "categories": {
+    "ccr": 1,
     "quant": 3,
     "data-analysis": 1,
     "quant-investigation": 1,
@@ -15,17 +16,107 @@
   },
   "skills": [
     {
+      "id": "analyze-ccr-errors",
+      "name": "analyze-ccr-errors",
+      "title": "Analyze CCR Errors",
+      "description": "Correlate selected CVAR/GCVAR or backtesting impacts with three-sheet ErrorByTrade XLSX asymmetries, quantify links separately for MTF00 and EEPE scopes, classify error/deal patterns, and return compact evidence without exposing the raw workbook to the LLM.",
+      "version": "0.2.0",
+      "category": "ccr",
+      "subcategory": "release-validation",
+      "tags": [
+        "ccr",
+        "cvar",
+        "gcvar",
+        "errors",
+        "backtesting",
+        "release-validation"
+      ],
+      "aliases": [],
+      "status": "reviewed",
+      "verification": {
+        "level": "reviewed",
+        "reviewed_by": "SkillHub maintainers",
+        "last_reviewed": "2026-10-01"
+      },
+      "quality_score": 80,
+      "owner": "ccr-quant",
+      "runtime": {
+        "python": ">=3.10"
+      },
+      "entrypoints": {
+        "default": "scripts/analyze_errors.py"
+      },
+      "permissions": {
+        "filesystem": "read-write-artifacts",
+        "network": false
+      },
+      "compatibility": {
+        "github-copilot": "full",
+        "github-copilot-cli": "full",
+        "microsoft-copilot": "export-only"
+      },
+      "dependencies": {
+        "python": [
+          "openpyxl>=3.1,<4"
+        ]
+      },
+      "recommended_dependencies": {},
+      "exports": {},
+      "examples": [],
+      "latest_changelog": "## 0.2.0 — 2026-10-01\n\n- Added metric-specific MTF00/EEPE linkage so one efficient workbook scan can distinguish which error asymmetries overlap each impact scope.\n- Preserved Legal Entity/master/deal scoping and one-sided Ref/Test error semantics.",
+      "estimated_tokens_full": 5527,
+      "files": [
+        {
+          "path": "CHANGELOG.md",
+          "bytes": 432,
+          "estimated_tokens": 108,
+          "sha256": "f5fdcf1bdb2a1e60cae101e9be2570093ed68764260bd17121068f664d0fa5b5"
+        },
+        {
+          "path": "SKILL.md",
+          "bytes": 1956,
+          "estimated_tokens": 486,
+          "sha256": "27d4d67b9271bc140ab18a4d39d81af224fe7f1da412788ae9f1e439d36ad689"
+        },
+        {
+          "path": "examples/usage.md",
+          "bytes": 129,
+          "estimated_tokens": 33,
+          "sha256": "c9ec77b4a642611a29ad52fa251208f12b52c7e61734006f33a17adbd365cee7"
+        },
+        {
+          "path": "references/method.md",
+          "bytes": 261,
+          "estimated_tokens": 66,
+          "sha256": "2d47fc9df8ee7bf953c1d4577047861444e1fe24ac8ff35a5ca1833503a095a1"
+        },
+        {
+          "path": "scripts/analyze_errors.py",
+          "bytes": 18606,
+          "estimated_tokens": 4651,
+          "sha256": "d7b2071346376b9a2de721caf92562b87a5f0d358b513324152756fa8dcd073a"
+        },
+        {
+          "path": "skillhub.yaml",
+          "bytes": 732,
+          "estimated_tokens": 183,
+          "sha256": "0d9c3519decebe48ba14d59399b3d04c274d66be0ff30575d3111a8d30c2407a"
+        }
+      ]
+    },
+    {
       "id": "analyze-large-result-diff",
       "name": "analyze-large-result-diff",
       "title": "Analyze Large Result Diff",
-      "description": "Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM.",
-      "version": "0.3.0",
+      "description": "Reduce a very large three-sheet CCR result workbook (CVAR/GCVAR) or compatible CSV into compact evidence by normalizing Details, Non Ref and Non Test, selecting material MTF00/EEPE impacts by strict threshold and Pareto coverage, enriching only selected impacts, and keeping raw rows out of LLM context.",
+      "version": "0.5.0",
       "category": "quant",
       "subcategory": "large-data-forensics",
       "tags": [
         "ccr",
         "cvar",
         "gcvar",
+        "xlsx",
         "csv",
         "performance",
         "regression",
@@ -35,6 +126,7 @@
         "coverage"
       ],
       "aliases": [
+        "large xlsx impact",
         "large csv impact",
         "cvar impact analyzer",
         "gcvar impact analyzer",
@@ -66,7 +158,9 @@
       },
       "dependencies": {
         "commands": [],
-        "python": [],
+        "python": [
+          "openpyxl>=3.1,<4"
+        ],
         "skills": []
       },
       "recommended_dependencies": {
@@ -80,32 +174,28 @@
       },
       "examples": [
         {
-          "title": "CVAR with production defaults",
-          "command": "skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar"
+          "title": "CVAR workbook",
+          "command": "skillhub run analyze-large-result-diff -- --profile cvar --input CcrMetrics.xlsx --output out/cvar"
         },
         {
-          "title": "CVAR with 80 percent impact coverage",
-          "command": "skillhub run analyze-large-result-diff -- --profile cvar --input cvar.csv --output out/cvar --coverage 0.8"
-        },
-        {
-          "title": "GCVAR with an overridden threshold",
-          "command": "skillhub run analyze-large-result-diff -- --profile gcvar --input gcvar.csv --output out/gcvar --threshold \"EepeInEur Gap=25000\""
+          "title": "GCVAR workbook",
+          "command": "skillhub run analyze-large-result-diff -- --profile gcvar --input CcrMetrics_Gcvar.xlsx --output out/gcvar"
         }
       ],
-      "latest_changelog": "## 0.3.0 — 2026-09-30\n\n- Added native-currency-aware MTF00 Pareto selection: EUR/USD (and any other observed currency) are covered independently rather than summed.\n- Added top-1/top-3/top-10, HHI/effective-contributor, cancellation, threshold-capture and 50/80/90/95% contributor-count diagnostics.\n- Added selected-row secondary numeric diagnostics for MTF/EEPE/RWA gaps and ratios.\n- Added robust percentage parsing for ratio fields exported as `0.25%` or parenthesized negatives.\n- Calibrated dimensions and Ref/Test/Result clues to the supplied CVAR/GCVAR compare layout.\n- Added aggregation-path shape diagnostics (for example `LegalEntity>Master`) and explicit selected AggregationLevel reporting without treating high-cardinality IDs as categorical patterns.",
-      "estimated_tokens_full": 5394,
+      "latest_changelog": "## 0.5.0 — 2026-10-01\n\n- Switched the primary CCR contract from flat CSV assumptions to three-sheet XLSX result workbooks (`Details`, `Non Ref`, `Non Test`).\n- Added read-only XLSX normalization/cache with structural Test-only/Ref-only signed gap derivation.\n- Preserved the compact evidence contract so agents never need raw workbook rows.\n- Kept CSV compatibility for generic/legacy use while documenting XLSX as the production CCR path.",
+      "estimated_tokens_full": 5909,
       "files": [
         {
           "path": "CHANGELOG.md",
-          "bytes": 1389,
-          "estimated_tokens": 347,
-          "sha256": "a7eb1b67dd924f983a70b786344610e3acedb5ee49e282464ccb05f89b3cf7f7"
+          "bytes": 1832,
+          "estimated_tokens": 457,
+          "sha256": "f9da8c0049f45b1f87a64a5e7087802893108e46d951cbdc76dd7de7bf32a7c0"
         },
         {
           "path": "SKILL.md",
-          "bytes": 4628,
-          "estimated_tokens": 1154,
-          "sha256": "1aeb9196e45585d2a4c085393bf9dc39902fa1a0430e7962e2289d51d2d9c382"
+          "bytes": 5426,
+          "estimated_tokens": 1353,
+          "sha256": "d8188eec77583c9e9e6d86b0f1749e1787a58ff95202540289e13b086c31dae1"
         },
         {
           "path": "examples/usage.md",
@@ -121,15 +211,15 @@
         },
         {
           "path": "scripts/analyze.py",
-          "bytes": 13465,
-          "estimated_tokens": 3367,
-          "sha256": "75fb0884acb67e57b41ee38c0aed15d28db3a0050629485d6b59539b487162f5"
+          "bytes": 14454,
+          "estimated_tokens": 3614,
+          "sha256": "2f9c2cb428aedbb0259b86cd143d586c7f61fe60e25a2bbe2f57745ec6541b98"
         },
         {
           "path": "skillhub.yaml",
-          "bytes": 1430,
-          "estimated_tokens": 358,
-          "sha256": "0553b81b6e045dc5b8c8735ce35135a3ab475fec1655fd37e58ea14dc9813b2d"
+          "bytes": 1267,
+          "estimated_tokens": 317,
+          "sha256": "adf8e47016e436af54ef88bfbd564012b7a704dca0d139c6fd6d4e5f8db608fb"
         },
         {
           "path": "tests/README.md",
@@ -143,14 +233,15 @@
       "id": "backtesting-drilldown",
       "name": "backtesting-drilldown",
       "title": "Backtesting Drilldown",
-      "description": "Use compact upstream CVAR or GCVAR evidence to filter a much larger CCR backtesting comparison CSV early, derive DealId from the TRD segment of AggregationLevel when necessary, rank material deal contributors by Pareto coverage, and return only compact evidence.",
-      "version": "0.3.0",
+      "description": "Use compact CVAR/GCVAR evidence to filter a much larger three-sheet CCR backtesting workbook by impacted Legal Entity, derive TRD deal IDs, rank the deals explaining material MTF00/EEPE movement, classify deal families, and return only compact deal-level evidence.",
+      "version": "0.5.0",
       "category": "quant",
       "subcategory": "ccr-forensics",
       "tags": [
         "ccr",
         "backtesting",
         "deal",
+        "xlsx",
         "csv",
         "performance",
         "regression",
@@ -188,7 +279,9 @@
       },
       "dependencies": {
         "commands": [],
-        "python": [],
+        "python": [
+          "openpyxl>=3.1,<4"
+        ],
         "skills": [
           "analyze-large-result-diff"
         ]
@@ -201,28 +294,24 @@
       "exports": {},
       "examples": [
         {
-          "title": "Drill CVAR impact into backtesting deals",
-          "command": "skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis"
-        },
-        {
-          "title": "Use 80 percent deal coverage",
-          "command": "skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis --coverage 0.8"
+          "title": "Drill CVAR workbook impact into backtesting deals",
+          "command": "skillhub run backtesting-drilldown -- --input Backtesting.xlsx --evidence cvar-analysis/summary.json --output bt-analysis"
         }
       ],
-      "latest_changelog": "## 0.3.0 — 2026-09-30\n\n- Added native-currency-aware MTF00 deal concentration and 50/80/90/95% contributor-count diagnostics.\n- Added a second selective pass over only chosen deals for Ref/Test, Result, RWA and ratio diagnostics.\n- Preserved fast upstream Legal Entity filtering and `/TRD:<DEAL_ID>` extraction from backtesting AggregationLevel.\n- Added multi-currency and selected-deal regression tests.",
-      "estimated_tokens_full": 4877,
+      "latest_changelog": "## 0.5.0 — 2026-10-01\n\n- Added three-sheet XLSX backtesting normalization and cache reuse.\n- Added deal-family classification: no prefix=Equity DPS, `ELI-`=Equity, other explicit prefix=FIC.\n- Added MTF00↔EEPE selected-deal overlap routing and retained native-currency MTF00 separation.\n- Updated the skill contract around Legal Entity-first filtering of very large backtesting workbooks.",
+      "estimated_tokens_full": 5405,
       "files": [
         {
           "path": "CHANGELOG.md",
-          "bytes": 885,
-          "estimated_tokens": 221,
-          "sha256": "2a0eb4ad07e14152cca570fa561bdad31c1d33e3eab61a018a0abe40474d6101"
+          "bytes": 1279,
+          "estimated_tokens": 318,
+          "sha256": "302b4ed75f1a792f5f6a50102cedd66e2c2c6a4e48808e7f7a9aee8796c9845a"
         },
         {
           "path": "SKILL.md",
-          "bytes": 2711,
-          "estimated_tokens": 678,
-          "sha256": "1d2f3aa05c4cd418840b3f74710cbc02bcda12dafacb67efd337f35fec19aa11"
+          "bytes": 3309,
+          "estimated_tokens": 824,
+          "sha256": "35c6384bbafd27cb2e921f42a2e62bb22d38c63fbec4ed466b73c074d2e100c9"
         },
         {
           "path": "examples/usage.md",
@@ -238,15 +327,15 @@
         },
         {
           "path": "scripts/drilldown.py",
-          "bytes": 14229,
-          "estimated_tokens": 3558,
-          "sha256": "51061cdc010cc17c4497415537daad7cce7dc162501cf1684c8ac9ef4709d1d6"
+          "bytes": 15520,
+          "estimated_tokens": 3880,
+          "sha256": "2d94131708fa90158f740b326dbcf06ee5d7f776351de4cb83dfe504e37d2bbe"
         },
         {
           "path": "skillhub.yaml",
-          "bytes": 1189,
-          "estimated_tokens": 298,
-          "sha256": "9e5922e8e3582a932ca6c54d4e0567e597748d7891c2ea5d4bf9b17ecf2cfbe3"
+          "bytes": 1041,
+          "estimated_tokens": 261,
+          "sha256": "966aa2f6d72cffa4f1faa3aea354cf048cf4ec973036a9bc8e038034b4c513be"
         },
         {
           "path": "tests/README.md",
@@ -490,8 +579,8 @@
       "id": "prepare-ccr-release-evidence",
       "name": "prepare-ccr-release-evidence",
       "title": "Prepare CCR Release Evidence",
-      "description": "Orchestrate the deterministic data-reduction part of CCR release validation: reduce CVAR and GCVAR compare CSVs, drill only impacted Legal Entities into huge backtesting CSVs, build one compact LLM handoff, and optionally prefetch reusable release-PR forensic candidates.",
-      "version": "0.2.0",
+      "description": "Orchestrate the deterministic CCR release-validation data plane from CVAR/GCVAR result XLSX workbooks, deal-level backtesting workbooks and ErrorByTrade workbooks; investigate CVAR MTF00 then EEPE, reuse CVAR evidence for mirrored GCVAR issues, and optionally prefetch reusable PR-forensics candidates while keeping raw workbooks out of LLM context.",
+      "version": "0.4.0",
       "category": "quant",
       "subcategory": "workflow-preparation",
       "tags": [
@@ -500,6 +589,8 @@
         "cvar",
         "gcvar",
         "backtesting",
+        "xlsx",
+        "errors",
         "workflow",
         "evidence",
         "pr-forensics"
@@ -534,10 +625,14 @@
       },
       "dependencies": {
         "commands": [],
-        "python": [],
+        "python": [
+          "openpyxl>=3.1,<4"
+        ],
         "skills": [
           "analyze-large-result-diff",
-          "backtesting-drilldown"
+          "backtesting-drilldown",
+          "analyze-ccr-errors",
+          "release-pr-forensics"
         ]
       },
       "recommended_dependencies": {
@@ -551,40 +646,40 @@
       "exports": {},
       "examples": [
         {
-          "title": "Prepare CVAR and GCVAR evidence",
-          "command": "skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --cvar-backtesting cvar-bt.csv --gcvar gcvar.csv --gcvar-backtesting gcvar-bt.csv --prod-ref release/26.9 --candidate-ref release/26.10 --output out/ccr-release"
+          "title": "Full CCR release evidence",
+          "command": "skillhub run prepare-ccr-release-evidence -- --cvar CcrMetrics.xlsx --cvar-backtesting CvarBacktesting.xlsx --cvar-errors CvarErrorByTrade.xlsx --cvar-backtesting-errors CvarBacktestingErrorByTrade.xlsx --gcvar CcrMetrics_Gcvar.xlsx --gcvar-backtesting GcvarBacktesting.xlsx --gcvar-errors GcvarErrorByTrade.xlsx --gcvar-backtesting-errors GcvarBacktestingErrorByTrade.xlsx --prod-ref release/26.9 --candidate-ref release/26.10 --output out/ccr-release"
         },
         {
-          "title": "Prepare evidence and prefetch candidate PRs",
-          "command": "skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --gcvar gcvar.csv --prod-ref release/26.9 --candidate-ref release/26.10 --repo OWNER/REPO --with-prs --output out/ccr-release"
+          "title": "Full CCR release evidence plus PRs",
+          "command": "skillhub run prepare-ccr-release-evidence -- --cvar CcrMetrics.xlsx --gcvar CcrMetrics_Gcvar.xlsx --prod-ref release/26.9 --candidate-ref release/26.10 --repo OWNER/REPO --with-prs --output out/ccr-release"
         }
       ],
-      "latest_changelog": "## 0.2.0 — 2026-09-30\n\n- Added one-command CVAR + GCVAR + targeted backtesting workspace preparation using the calibrated real compare schema.\n- Compact workflow context now exposes impact concentration, contributor ladders, Ref/Test clues, ratio/RWA diagnostics and deal evidence without embedding raw CSVs.\n- Added optional generic `release-pr-forensics` prefetch between production and candidate refs.\n- Standardized the real release naming examples (`release/26.9`, `release/26.10`).",
-      "estimated_tokens_full": 5102,
+      "latest_changelog": "## 0.4.0 — 2026-10-01\n\n- Rebuilt the workflow for real XLSX result/backtesting workbooks and matching three-sheet `ErrorByTrade.xlsx` inputs.\n- Encoded CVAR MTF00-first → deal attribution → error correlation → EEPE-second reasoning.\n- Added GCVAR-vs-CVAR signature gating to avoid redundant expensive GCVAR deep scans.\n- Added compact root-cause routing, deal-family/error-category PR hints, and `expected_dev_change` / `suspected_bug` / `inconclusive` synthesis contract.",
+      "estimated_tokens_full": 7733,
       "files": [
         {
           "path": "CHANGELOG.md",
-          "bytes": 728,
-          "estimated_tokens": 182,
-          "sha256": "e425683b367d02b8caf7ed94aa0b06cd96687e31a74052b154d49d145302b532"
+          "bytes": 1210,
+          "estimated_tokens": 300,
+          "sha256": "48cc3768e024123a6269698e46e79613496a18d4c37e6b5468d5130a0c7d4753"
         },
         {
           "path": "SKILL.md",
-          "bytes": 2124,
-          "estimated_tokens": 531,
-          "sha256": "9421b0d6550e9f2b66146fb55c3517cde613604de0686019c0402a42b4e68cb7"
+          "bytes": 5175,
+          "estimated_tokens": 1288,
+          "sha256": "5025e32b001db99a70d1456bb9365f3d31c33d024714d5d301a072db3ce54ae8"
         },
         {
           "path": "scripts/prepare.py",
-          "bytes": 16116,
-          "estimated_tokens": 4026,
-          "sha256": "c848341444ea8caa53cd0c2940057086f2718eee6b7011d525e485b65b15523f"
+          "bytes": 22821,
+          "estimated_tokens": 5697,
+          "sha256": "f6a93426a6127e95362c2dfc1fecc272e880ec3a5b865ebdb7059ea4a67e3b8d"
         },
         {
           "path": "skillhub.yaml",
-          "bytes": 1451,
-          "estimated_tokens": 363,
-          "sha256": "6a684f16782e9ff669dbdb5a7b903fa8006993c1ffa154149f6f64d5577e0fe6"
+          "bytes": 1789,
+          "estimated_tokens": 448,
+          "sha256": "d407bb57d9b10e1ff20c75097f9e4a5914d4b1e3a5155f9036172208dde23614"
         }
       ]
     },
@@ -768,6 +863,7 @@
         "prepare-ccr-release-evidence",
         "analyze-large-result-diff",
         "backtesting-drilldown",
+        "analyze-ccr-errors",
         "release-pr-forensics"
       ],
       "_file": "ccr-release-validation.yaml"
@@ -795,6 +891,7 @@
         "prepare-ccr-release-evidence",
         "analyze-large-result-diff",
         "backtesting-drilldown",
+        "analyze-ccr-errors",
         "release-pr-forensics"
       ],
       "_file": "ccr-release-validation.yaml"
@@ -833,14 +930,16 @@
       "schema_version": 1,
       "id": "ccr-release-validation",
       "name": "CCR Release Validation Stack",
-      "description": "Installs the reusable CCR validation skills and the specialized CVAR, GCVAR and synthesis agents. The workflow specification remains centrally documented in SkillHub.",
+      "description": "Installs the reusable CCR validation skills plus a top-level coordinator and specialized CVAR, GCVAR and synthesis agents. Product repositories remain untouched.",
       "skills": [
         "prepare-ccr-release-evidence",
         "analyze-large-result-diff",
         "backtesting-drilldown",
+        "analyze-ccr-errors",
         "release-pr-forensics"
       ],
       "agents": [
+        "ccr-release-validator",
         "ccr-cvar-release-validator",
         "ccr-gcvar-release-validator",
         "ccr-release-validation-synthesizer"
@@ -854,6 +953,7 @@
         ]
       },
       "recommended_python": [
+        "openpyxl",
         "polars"
       ],
       "workflow": "ccr-release-validation",
@@ -862,10 +962,10 @@
   ],
   "workflows": [
     {
-      "schema_version": 2,
+      "schema_version": 3,
       "id": "ccr-release-validation",
       "name": "CCR Release Validation",
-      "description": "Multi-agent workflow for validating a candidate CCR release against production using CVAR and GCVAR compare-job evidence, targeted deal-level backtesting, and reusable PR/code forensics when material impacts require explanation.",
+      "description": "Multi-agent validation of a candidate CCR release using XLSX-aware CVAR/GCVAR result comparisons, deal-level backtesting, ErrorByTrade asymmetry analysis, and reusable PR/code forensics.",
       "status": "usable-today-explicit-orchestrated-handoff",
       "owner": "ccr-quant",
       "release_naming": {
@@ -879,145 +979,125 @@
         "threshold_operator": "gt",
         "default_absolute_threshold": 10000.0,
         "default_coverage_target": 0.9,
-        "configurable_coverage_examples": [
-          0.8,
-          0.9
-        ],
         "metrics": [
           "Mtf00Gap",
           "EepeInEurGap"
         ]
       },
-      "trigger_examples": [
-        "Validate candidate release release/26.10 against production release/26.9.",
-        "Validate the CCR release using the CVAR and GCVAR compare-job outputs and explain material regressions."
-      ],
+      "workbook_contract": {
+        "result_files": [
+          "CcrMetrics.xlsx",
+          "CcrMetrics_Gcvar.xlsx"
+        ],
+        "sheets": {
+          "Details": "present in both Ref and Test",
+          "Non Ref": "present only in Test/candidate",
+          "Non Test": "present only in Ref/production"
+        },
+        "error_file_pattern": "ErrorByTrade.xlsx",
+        "structural_rows_are_material_candidates": true
+      },
       "inputs": {
         "required": [
           "production_ref",
           "candidate_ref",
-          "cvar_comparison_csv",
-          "gcvar_comparison_csv"
+          "cvar_result_workbook"
         ],
         "recommended": [
-          "cvar_backtesting_csv",
-          "gcvar_backtesting_csv",
+          "cvar_backtesting_workbook",
+          "cvar_error_workbook",
+          "cvar_backtesting_error_workbook",
+          "gcvar_result_workbook",
+          "gcvar_backtesting_workbook",
+          "gcvar_error_workbook",
+          "gcvar_backtesting_error_workbook",
           "repository"
-        ],
-        "optional": [
-          "coverage_target",
-          "first_bad_date",
-          "materiality_overrides"
         ]
       },
       "agents": [
         {
+          "id": "ccr-release-validator",
+          "phase": "coordinate",
+          "role": "Today-facing coordinator: runs deterministic preparation from workbook paths and follows the multi-agent workflow contract."
+        },
+        {
           "id": "ccr-cvar-release-validator",
-          "role": "Reduce CVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.",
-          "phase": "validate"
+          "phase": "validate-cvar",
+          "role": "Investigate CVAR MTF00 first, then EEPE, including deal attribution and errors."
         },
         {
           "id": "ccr-gcvar-release-validator",
-          "role": "Reduce GCVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.",
-          "phase": "validate"
+          "phase": "validate-gcvar",
+          "role": "First test whether GCVAR mirrors CVAR; deep-dive only when needed."
         },
         {
           "id": "ccr-release-validation-synthesizer",
-          "role": "Combine compact validator evidence, explain shared/isolated patterns, and use reusable PR forensics when code-level investigation is justified.",
-          "phase": "synthesize"
+          "phase": "root-cause-and-decision",
+          "role": "Correlate data/errors/code, identify candidate PRs, and classify expected change vs suspected bug vs inconclusive."
         }
       ],
       "skills": [
         "prepare-ccr-release-evidence",
         "analyze-large-result-diff",
         "backtesting-drilldown",
+        "analyze-ccr-errors",
         "release-pr-forensics"
       ],
       "execution": [
         {
-          "stage": "evidence-preparation",
-          "tool": "prepare-ccr-release-evidence",
-          "inputs": [
-            "cvar_comparison_csv",
-            "cvar_backtesting_csv",
-            "gcvar_comparison_csv",
-            "gcvar_backtesting_csv",
-            "production_ref",
-            "candidate_ref"
-          ],
-          "produces": [
-            "workflow_context.md",
-            "workflow_manifest.json",
-            "pr_forensics_hints.json"
-          ],
-          "note": "Deterministic fast reduction. Raw CSVs stay outside LLM context."
-        },
-        {
-          "stage": "cvar-validation",
+          "stage": "prepare-cvar",
           "agent": "ccr-cvar-release-validator",
-          "inputs": [
-            "cvar_comparison_csv",
-            "cvar_backtesting_csv"
-          ],
-          "may_run_in_parallel_with": [
-            "gcvar-validation"
-          ],
-          "produces": [
-            "cvar/summary.json",
-            "cvar/agent_context.md",
-            "cvar-backtesting/backtesting_summary.json",
-            "cvar-backtesting/agent_context.md"
+          "order": [
+            "cvar.mtf00",
+            "cvar.backtesting.mtf00",
+            "cvar.errors.mtf00",
+            "cvar.eepe",
+            "cvar.backtesting.eepe",
+            "cvar.errors.eepe",
+            "cvar.mtf00-eepe-link"
           ]
         },
         {
-          "stage": "gcvar-validation",
+          "stage": "gcvar-precheck",
           "agent": "ccr-gcvar-release-validator",
-          "inputs": [
-            "gcvar_comparison_csv",
-            "gcvar_backtesting_csv"
-          ],
-          "may_run_in_parallel_with": [
-            "cvar-validation"
-          ],
-          "produces": [
-            "gcvar/summary.json",
-            "gcvar/agent_context.md",
-            "gcvar-backtesting/backtesting_summary.json",
-            "gcvar-backtesting/agent_context.md"
+          "order": [
+            "gcvar.result-signature",
+            "compare-to-cvar",
+            "deep-dive-only-if-needed"
           ]
         },
         {
-          "stage": "synthesis-root-cause",
+          "stage": "synthesis",
           "agent": "ccr-release-validation-synthesizer",
-          "consumes": [
-            "cvar/summary.json",
-            "cvar-backtesting/backtesting_summary.json",
-            "gcvar/summary.json",
-            "gcvar-backtesting/backtesting_summary.json"
-          ],
-          "optional_skill_calls": [
-            "release-pr-forensics"
-          ],
-          "produces": [
-            "ccr-release-validation-report"
+          "order": [
+            "data-hypotheses",
+            "error-explanation",
+            "release-pr-forensics",
+            "selective-diff-inspection",
+            "discriminating-test",
+            "classification"
           ]
         }
       ],
       "operating_rules": [
-        "Raw huge CSV files are local tool inputs only and never LLM context.",
-        "The strict materiality rule is abs(gap) > 10000; exactly 10000 is not material.",
-        "Coverage is calculated independently per metric from absolute material movement; MTF00 and EEPE units are never mixed.",
-        "Backtesting is filtered first by impacted LegalEntity; its AggregationLevel is deal-grained and DealId is derived from the TRD segment when necessary.",
-        "PR ranking is evidence for investigation, not proof of causality.",
-        "Mtf00Gap materiality is 10000 in the row currency. When multiple currencies are present, Pareto coverage is computed independently per currency; native EUR/USD amounts are never summed for concentration statistics.",
-        "EepeInEurGap is EUR-denominated and Pareto coverage is global across the file.",
-        "The compare schema contains useful secondary diagnostics (RWA gap/ratio, EEPE gap/ratio, EffectiveMaturity and RiskWeightedExposureFactor Ref/Test changes, CashFlowType/Currency result flags). These are explanation clues, not primary materiality triggers."
+        "Raw XLSX/CSV files are local deterministic-tool inputs only, never normal LLM context.",
+        "Strict materiality is abs(gap) > 10000; exactly 10000 is not material.",
+        "MTF00 coverage is independent by native currency; EEPE-in-EUR coverage is global.",
+        "Backtesting filters impacted Legal Entities first and derives DealId from the TRD segment.",
+        {
+          "Deal family convention": "no prefix=Equity DPS, ELI-=Equity, other explicit prefix=FIC."
+        },
+        "Error asymmetry on an impacted LE/deal is evidence, not automatic causality.",
+        "EEPE can share MTF00 root cause or be driven by other unseen MTFs / other factors.",
+        "GCVAR should reuse CVAR root-cause evidence when deterministic signature similarity is high.",
+        "PR ranking is relevance evidence, not proof of causality.",
+        "Final material issue classification is expected_dev_change, suspected_bug, or inconclusive."
       ],
-      "notes": [
-        "The deterministic CVAR/GCVAR/backtesting data plane is calibrated to the provided real compare-file screenshots.",
-        "Full production approval still benefits from a sanitized real CSV sample and one historical known regression to verify exact values, edge cases and throughput.",
-        "Multi-agent automatic handoff depends on the GitHub Copilot environment; the same workflow can be executed today with explicit validator then synthesizer handoff."
-      ],
+      "today_use": {
+        "recommended_entry_agent": "ccr-release-validator",
+        "execution_model": "The coordinator runs prepare-ccr-release-evidence, then reasons over compact artifacts. Specialized agents remain independently invocable and become natural delegation targets when the enterprise agent platform supports it.",
+        "raw_workbooks_in_llm_context": false
+      },
       "_file": "ccr-release-validation.yaml"
     }
   ],
@@ -1025,17 +1105,22 @@
     {
       "id": "ccr-cvar-release-validator",
       "name": "ccr-cvar-release-validator",
-      "description": "Specialized CCR agent that validates the CVAR side of a candidate release by reducing the large CVAR comparison, selecting the largest material MTF00/EEPE impacts, detecting patterns across Ref/Test columns and business dimensions, then drilling only impacted Legal Entities into backtesting deal evidence."
+      "description": "Specialized CCR agent that validates the CVAR side of a candidate release from CcrMetrics.xlsx, backtesting workbooks and ErrorByTrade workbooks. It investigates MTF00 first, then EEPE, and returns compact evidence for root-cause synthesis."
     },
     {
       "id": "ccr-gcvar-release-validator",
       "name": "ccr-gcvar-release-validator",
-      "description": "Specialized CCR agent that validates the GCVAR side of a candidate release using the same real compare-file schema and materiality policy as CVAR, then drills impacted Legal Entities into backtesting deal evidence."
+      "description": "Specialized CCR agent that validates GCVAR after first checking whether the same signature already exists in CVAR, avoiding redundant expensive backtesting/error analysis when the issue is clearly mirrored."
     },
     {
       "id": "ccr-release-validation-synthesizer",
       "name": "ccr-release-validation-synthesizer",
-      "description": "CCR workflow synthesis/root-cause agent that combines compact CVAR and GCVAR validator evidence, identifies shared/isolated release impacts, invokes reusable PR forensics when justified, and produces an evidence-backed release-validation investigation brief."
+      "description": "Root-cause and release-validation agent that combines CVAR/GCVAR compact evidence, ErrorByTrade asymmetries and reusable PR forensics to explain material release impacts and classify each issue as expected dev change, suspected bug or inconclusive."
+    },
+    {
+      "id": "ccr-release-validator",
+      "name": "ccr-release-validator",
+      "description": "Top-level CCR release-validation coordinator for use today in GitHub Copilot. Starting from local CVAR/GCVAR result, backtesting and ErrorByTrade workbook paths, it runs the deterministic evidence pipeline, reasons MTF00-first then EEPE, reuses CVAR evidence for mirrored GCVAR issues, invokes generic PR forensics when available, and produces an evidence-calibrated release-impact report."
     }
   ]
 }

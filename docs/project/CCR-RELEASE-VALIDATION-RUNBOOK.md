@@ -1,211 +1,288 @@
 # CCR Release Validation — operator runbook
 
-This page is the shortest path from **four huge compare CSVs** to a small evidence package that GitHub Copilot can reason over.
+This is the practical procedure to run the current workflow today on a company workstation.
 
-## What you give the system
+## 1. One-time installation
 
-For a full release validation, provide **file paths**, not the CSV contents:
-
-```text
-CVAR compare CSV
-CVAR backtesting compare CSV
-GCVAR compare CSV
-GCVAR backtesting compare CSV
-production ref     e.g. release/26.9
-candidate ref      e.g. release/26.10
-repository         optional, for PR forensics
-```
-
-The LLM must never read the raw huge files. Python tools read them locally and emit compact evidence.
-
-## Preferred: one command
+From the SkillHub repository:
 
 ```powershell
-skillhub run prepare-ccr-release-evidence -- `
-  --cvar "C:\jobs\cvar-compare.csv" `
-  --cvar-backtesting "C:\jobs\cvar-backtesting.csv" `
-  --gcvar "C:\jobs\gcvar-compare.csv" `
-  --gcvar-backtesting "C:\jobs\gcvar-backtesting.csv" `
-  --prod-ref release/26.9 `
-  --candidate-ref release/26.10 `
-  --coverage 0.90 `
-  --output "C:\work\ccr-26.10"
+.\scripts\bootstrap.ps1
 ```
 
-For an 80% investigation instead:
-
-```text
---coverage 0.80
-```
-
-The strict materiality rule remains `abs(gap) > 10,000`.
-
-### Include GitHub PR candidates
-
-When `gh auth status` is healthy and you know the repository:
+For large production files, install the fast CCR extra:
 
 ```powershell
-skillhub run prepare-ccr-release-evidence -- `
-  --cvar "C:\jobs\cvar-compare.csv" `
-  --cvar-backtesting "C:\jobs\cvar-backtesting.csv" `
-  --gcvar "C:\jobs\gcvar-compare.csv" `
-  --gcvar-backtesting "C:\jobs\gcvar-backtesting.csv" `
-  --prod-ref release/26.9 `
-  --candidate-ref release/26.10 `
-  --repo OWNER/REPO `
-  --with-prs `
-  --coverage 0.90 `
-  --output "C:\work\ccr-26.10"
+pip install -e ".[ccr]"
 ```
 
-PR ranking is a **candidate list**, not proof of causality. The agent should inspect selective patches and propose a discriminating test before calling a PR a confirmed cause.
-
-## What the data tools do
-
-### CVAR / GCVAR compare reducer
-
-Input:
-
-```text
-one CVAR or GCVAR comparison CSV
-```
-
-Command when used directly:
+Check the environment:
 
 ```powershell
-skillhub run analyze-large-result-diff -- `
-  --profile cvar `
-  --input "C:\jobs\cvar-compare.csv" `
-  --coverage 0.90 `
-  --output "C:\work\ccr-26.10\cvar"
+skillhub doctor
+skillhub validate
 ```
 
-Use `--profile gcvar` for GCVAR.
-
-Primary materiality metrics:
-
-```text
-Mtf00 Gap       strict |gap| > 10,000 in the row currency
-EepeInEur Gap   strict |gap| > 10,000 EUR
-```
-
-`Mtf00 Gap` is multi-currency. EUR and USD native amounts are **not summed together** for Pareto concentration. The tool performs coverage separately per currency and unions the selected rows.
-
-After thresholding, the reducer retains the largest contributors required to explain the requested absolute material movement. It also reports how many contributors are needed for 50%, 80%, 90% and 95%.
-
-The reducer then performs a second pass only for selected rows and looks for explanation clues in:
-
-- Legal Entity and aggregation concentration;
-- positive vs negative movement and cancellation;
-- Effective Maturity Ref/Test changes;
-- Risk Weighted Exposure Factor Ref/Test changes;
-- EEPE error/ratio changes;
-- MTF/EEPE/RWA gap and ratio columns;
-- CashFlowType and Currency result flags;
-- MTF00 ↔ EEPE co-movement.
-
-Main outputs:
-
-```text
-summary.json          structured agent evidence
-agent_context.md      compact first LLM input
-material_impacts.csv  selected impacts only
-patterns.json         deterministic patterns
-run_manifest.json     audit/timing metadata
-```
-
-### Backtesting drilldown
-
-Input:
-
-```text
-backtesting compare CSV
-upstream CVAR/GCVAR summary.json
-```
-
-Example:
-
-```powershell
-skillhub run backtesting-drilldown -- `
-  --input "C:\jobs\cvar-backtesting.csv" `
-  --evidence "C:\work\ccr-26.10\cvar\summary.json" `
-  --coverage 0.90 `
-  --output "C:\work\ccr-26.10\cvar-backtesting"
-```
-
-The backtesting file is filtered first by impacted Legal Entity. `AggregationLevel` is deal-grained, so SkillHub extracts the deal identifier after `TRD:` instead of exact-matching the master-level CVAR/GCVAR aggregation string.
-
-The tool then ranks deal contributions and performs a second narrow diagnostic pass only on selected deals.
-
-Main outputs:
-
-```text
-backtesting_summary.json
-agent_context.md
-deal_impacts.csv
-backtesting_patterns.json
-```
-
-## What you give GitHub Copilot after the tools run
-
-Prefer this tiny file first:
-
-```text
-C:\work\ccr-26.10\workflow_context.md
-```
-
-Do **not** attach the raw CSVs to the chat.
-
-A practical request is:
-
-```text
-Use the CCR release-validation workflow.
-Production is release/26.9 and candidate is release/26.10.
-The deterministic workspace is C:\work\ccr-26.10.
-
-Read workflow_context.md first and open branch summary JSON only when more detail is needed.
-Explain:
-1. the material CVAR and GCVAR impacts,
-2. concentration / cancellation / Legal Entity / deal patterns,
-3. the most plausible data mechanisms,
-4. candidate PRs relevant to those mechanisms,
-5. the smallest experiment needed to confirm or reject each candidate cause.
-
-Do not read the raw huge CSVs into model context and do not call a PR causal from ranking alone.
-```
-
-If your Copilot environment supports installed custom agents, install the complete stack:
+Install the complete personal Copilot stack:
 
 ```powershell
 skillhub install-stack ccr-release-validation --check-deps
 ```
 
-Then use the `ccr-release-validation-synthesizer` agent. CVAR and GCVAR validator agents are available when you want branch-specific analysis.
-
-## Static UI vs local marketplace
-
-GitHub Pages is the read-only marketplace. It cannot see local files or installed skills.
-
-For local install/update controls:
+If PR forensics is required:
 
 ```powershell
-skillhub marketplace --open
+gh auth status
 ```
 
-## Current evidence contract
+## 2. Inputs for a full release validation
 
-The deterministic tools own numerical truth. Agents consume compact structured evidence rather than implementing CSV logic themselves.
+Give **paths**, not file contents.
 
-This separation means the processing engine can later move from Polars to DuckDB/C++/distributed compute without changing the agents.
+CVAR branch:
 
-## What still needs company-machine validation
+```text
+CcrMetrics.xlsx
+CVAR backtesting result workbook
+CVAR ErrorByTrade.xlsx
+CVAR backtesting ErrorByTrade.xlsx
+```
 
-Before calling the workflow fully production-approved, run it against:
+GCVAR branch:
 
-1. one real large CVAR + matching backtesting pair;
-2. one real large GCVAR + matching backtesting pair;
-3. one historical release with a known eventual culprit;
-4. representative multi-GB sizes to benchmark the Polars fast path;
-5. the final human release verdict policy (PASS/WARNING/FAIL, if desired).
+```text
+CcrMetrics_Gcvar.xlsx
+GCVAR backtesting result workbook
+GCVAR ErrorByTrade.xlsx
+GCVAR backtesting ErrorByTrade.xlsx
+```
 
-The screenshots established the column family and deal convention; a copied header line and sanitized rows remain useful as a golden regression fixture.
+Release metadata:
+
+```text
+production: release/26.9
+candidate:  release/26.10
+repository: OWNER/REPO   # only needed for PR forensics
+```
+
+Each result/error workbook must expose the compare sheets:
+
+```text
+Details
+Non Ref
+Non Test
+```
+
+## 3. Preferred full command
+
+```powershell
+skillhub run prepare-ccr-release-evidence -- `
+  --cvar "C:\jobs\CcrMetrics.xlsx" `
+  --cvar-backtesting "C:\jobs\CvarBacktesting.xlsx" `
+  --cvar-errors "C:\jobs\CvarErrorByTrade.xlsx" `
+  --cvar-backtesting-errors "C:\jobs\CvarBacktestingErrorByTrade.xlsx" `
+  --gcvar "C:\jobs\CcrMetrics_Gcvar.xlsx" `
+  --gcvar-backtesting "C:\jobs\GcvarBacktesting.xlsx" `
+  --gcvar-errors "C:\jobs\GcvarErrorByTrade.xlsx" `
+  --gcvar-backtesting-errors "C:\jobs\GcvarBacktestingErrorByTrade.xlsx" `
+  --prod-ref release/26.9 `
+  --candidate-ref release/26.10 `
+  --coverage 0.90 `
+  --repo OWNER/REPO `
+  --with-prs `
+  --output "C:\work\ccr-release-26.10"
+```
+
+If you want data analysis first and PRs later, remove:
+
+```text
+--repo OWNER/REPO
+--with-prs
+```
+
+If GCVAR must be independently drilled even when it mirrors CVAR:
+
+```text
+--gcvar-deep always
+```
+
+Default is:
+
+```text
+--gcvar-deep auto
+```
+
+## 4. What the command does
+
+### CVAR
+
+```text
+CcrMetrics.xlsx
+   -> normalize Details + Non Ref + Non Test
+   -> MTF00 material impact
+   -> Legal Entity / aggregation patterns
+   -> backtesting deals
+   -> deal families
+   -> result/backtesting errors
+   -> EEPE material impact
+   -> MTF00↔EEPE routing relationship
+```
+
+### GCVAR
+
+```text
+CcrMetrics_Gcvar.xlsx
+   -> cheap result signature
+   -> compare with CVAR
+       -> same issue: reuse CVAR root-cause path
+       -> different/uncertain: full GCVAR backtesting + errors
+```
+
+### Root cause
+
+```text
+compact data/error evidence
+   -> PR metadata in release range
+   -> selective diff inspection
+   -> mechanism hypothesis
+   -> discriminating experiment
+   -> expected_dev_change / suspected_bug / inconclusive
+```
+
+## 5. What GitHub Copilot should read
+
+Start with only:
+
+```text
+C:\work\ccr-release-26.10\workflow_context.md
+```
+
+Then let Copilot open structured artifacts only when it needs more evidence.
+
+Do not attach the raw XLSX files to the Copilot conversation.
+
+Suggested prompt after deterministic preparation:
+
+```text
+Use the ccr-release-validator agent.
+
+Production is release/26.9 and candidate is release/26.10.
+The deterministic SkillHub workspace is:
+C:\work\ccr-release-26.10
+
+Read workflow_context.md first and validate the release.
+Do MTF00 before EEPE, use the ErrorByTrade metric linkage, reuse CVAR root-cause evidence for mirrored GCVAR issues, and inspect PR diffs only after the data mechanism is established.
+Classify each material root-cause cluster as expected_dev_change, suspected_bug or inconclusive, with supporting/contradicting evidence and the smallest next discriminating test.
+Never read the raw XLSX files into model context and never call a PR causal only because it ranks highly.
+```
+
+You can also skip the manual preparation command and start directly with the coordinator agent. Give it the eight workbook paths plus production/candidate refs and repository; it is instructed to run `prepare-ccr-release-evidence` through the terminal first and then reason over the generated workspace. This is the recommended one-agent UX today when Copilot terminal execution is enabled.
+
+## 6. Run each deterministic tool manually
+
+### CVAR result workbook
+
+```powershell
+skillhub run analyze-large-result-diff -- `
+  --profile cvar `
+  --input "C:\jobs\CcrMetrics.xlsx" `
+  --coverage 0.90 `
+  --output "C:\work\test\cvar"
+```
+
+Read:
+
+```text
+cvar\agent_context.md
+cvar\summary.json
+```
+
+### CVAR backtesting workbook
+
+```powershell
+skillhub run backtesting-drilldown -- `
+  --input "C:\jobs\CvarBacktesting.xlsx" `
+  --evidence "C:\work\test\cvar\summary.json" `
+  --coverage 0.90 `
+  --output "C:\work\test\cvar-backtesting"
+```
+
+Read:
+
+```text
+cvar-backtesting\agent_context.md
+cvar-backtesting\backtesting_summary.json
+```
+
+### CVAR result errors
+
+```powershell
+skillhub run analyze-ccr-errors -- `
+  --input "C:\jobs\CvarErrorByTrade.xlsx" `
+  --evidence "C:\work\test\cvar\summary.json" `
+  --output "C:\work\test\cvar-errors"
+```
+
+### CVAR backtesting errors
+
+```powershell
+skillhub run analyze-ccr-errors -- `
+  --input "C:\jobs\CvarBacktestingErrorByTrade.xlsx" `
+  --evidence "C:\work\test\cvar-backtesting\backtesting_summary.json" `
+  --output "C:\work\test\cvar-backtesting-errors"
+```
+
+Use the same tools with `--profile gcvar` for GCVAR result analysis.
+
+## 7. Full test procedure on a known historical release
+
+Choose one historical release where the eventual cause is already known to the team.
+
+Do **not** tell Copilot the known culprit at first.
+
+Run the full command and record:
+
+```text
+CVAR workbook size / rows
+CVAR backtesting size / rows
+GCVAR workbook size / rows
+GCVAR backtesting size / rows
+Error workbook sizes
+wall-clock runtime
+```
+
+Then ask Copilot for the final report and freeze its candidate PR/root-cause answer.
+
+Only afterward reveal the known historical cause and compare:
+
+```text
+Was the material impact found?
+Were the correct LE/deals found?
+Was the relevant error asymmetry found?
+Did the actual PR appear in the shortlist?
+Did the proposed mechanism match reality?
+Was the final expected/bug/inconclusive classification sensible?
+```
+
+This blind replay is the best acceptance test for the workflow.
+
+## 8. Troubleshooting
+
+If Excel processing is slow:
+
+```powershell
+pip install -e ".[ccr]"
+skillhub doctor
+```
+
+Confirm Polars is installed. The first XLSX normalization is still an Excel parse; subsequent scans use the cached normalized table.
+
+If a workbook does not contain all three sheets, the tool fails explicitly instead of silently dropping structural differences.
+
+If GitHub access fails:
+
+```powershell
+gh auth status
+```
+
+The data workflow can still run without PR forensics.

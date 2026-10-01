@@ -6,7 +6,7 @@ A stack installs skills **and** personal Copilot agents in one command. Product 
 <section class="bundle-card" markdown>
 ## CCR Release Validation Stack
 
-Installs the reusable CCR validation skills and the specialized CVAR, GCVAR and synthesis agents. The workflow specification remains centrally documented in SkillHub.
+Installs the reusable CCR validation skills plus a top-level coordinator and specialized CVAR, GCVAR and synthesis agents. Product repositories remain untouched.
 
 <div class="hero-actions">
 <button class="sh-button primary skill-local-action" data-stack-action data-stack-id="ccr-release-validation">Install stack</button>
@@ -16,7 +16,9 @@ Installs the reusable CCR validation skills and the specialized CVAR, GCVAR and 
 - Skill: [prepare-ccr-release-evidence](../marketplace/skills/prepare-ccr-release-evidence/)
 - Skill: [analyze-large-result-diff](../marketplace/skills/analyze-large-result-diff/)
 - Skill: [backtesting-drilldown](../marketplace/skills/backtesting-drilldown/)
+- Skill: [analyze-ccr-errors](../marketplace/skills/analyze-ccr-errors/)
 - Skill: [release-pr-forensics](../marketplace/skills/release-pr-forensics/)
+- Agent: [ccr-release-validator](../agents/ccr-release-validator/)
 - Agent: [ccr-cvar-release-validator](../agents/ccr-cvar-release-validator/)
 - Agent: [ccr-gcvar-release-validator](../agents/ccr-gcvar-release-validator/)
 - Agent: [ccr-release-validation-synthesizer](../agents/ccr-release-validation-synthesizer/)

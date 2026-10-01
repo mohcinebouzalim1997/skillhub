@@ -15,11 +15,11 @@ def test_repo_validates():
 
 def test_registry_has_three_skills(tmp_path):
     data=build_registry(ROOT,tmp_path/'registry.json')
-    assert {s['id'] for s in data['skills']} == {'release-pr-forensics','compare-result-snapshots','investigate-metric-jump','analyze-large-result-diff','backtesting-drilldown','prepare-ccr-release-evidence'}
+    assert {s['id'] for s in data['skills']} == {'release-pr-forensics','compare-result-snapshots','investigate-metric-jump','analyze-large-result-diff','backtesting-drilldown','analyze-ccr-errors','prepare-ccr-release-evidence'}
 
 def test_site_sources_generate():
     data=prepare_site_sources(ROOT)
-    assert len(data['skills']) == 6
+    assert len(data['skills']) == 7
     assert (ROOT/'docs'/'marketplace'/'index.md').exists()
     assert 'Release PR Forensics' in (ROOT/'docs'/'marketplace'/'index.md').read_text(encoding='utf-8')
     assert (ROOT/'docs'/'marketplace'/'skills'/'release-pr-forensics'/'index.md').exists()
@@ -51,7 +51,7 @@ def test_sync_installed_skills(tmp_path):
 def test_stack_installs_skills_and_agent(tmp_path):
     from skillhub.installer import install_stack
     result=install_stack(ROOT,'ccr-release-validation',tmp_path/'skills',tmp_path/'agents')
-    assert {p.name for p in result['skills']} == {'release-pr-forensics','analyze-large-result-diff','backtesting-drilldown','prepare-ccr-release-evidence'}
+    assert {p.name for p in result['skills']} == {'release-pr-forensics','analyze-large-result-diff','backtesting-drilldown','analyze-ccr-errors','prepare-ccr-release-evidence'}
     assert (tmp_path/'agents'/'ccr-cvar-release-validator.agent.md').exists()
     assert (tmp_path/'agents'/'ccr-gcvar-release-validator.agent.md').exists()
     assert (tmp_path/'agents'/'ccr-release-validation-synthesizer.agent.md').exists()

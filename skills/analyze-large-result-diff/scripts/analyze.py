@@ -24,6 +24,7 @@ from skillhub.runtime.diagnostics import (
 )
 from skillhub.runtime.evidence import compact_agent_markdown, write_evidence
 from skillhub.runtime.profiling import StageTimer
+from skillhub.runtime.workbook import is_excel, materialize_ccr_comparison_workbook
 
 
 def _write_material_csv(path: Path, rows: list[dict]) -> None:
@@ -66,6 +67,16 @@ def analyze(args: argparse.Namespace) -> dict:
     timer = StageTimer()
     input_path = Path(args.input).expanduser().resolve()
     out = ensure_output_dir(args.output)
+    original_input = input_path
+    workbook_materialization = None
+    if is_excel(input_path):
+        with timer.measure("xlsx_normalization"):
+            workbook_materialization = materialize_ccr_comparison_workbook(
+                input_path,
+                cache_dir=out / "_cache",
+                purpose=f"{args.profile}-comparison",
+            )
+        input_path = workbook_materialization.path
     profile = load_profile(args.profile)
     profile = apply_metric_threshold_overrides(profile, args.threshold)
     profile = apply_metric_coverage_override(profile, args.coverage)
@@ -193,7 +204,11 @@ def analyze(args: argparse.Namespace) -> dict:
         "evidence_type": "large-result-diff",
         "title": f"{str(profile.get('name') or args.profile)} material impact evidence",
         "source": {
-            **file_metadata(input_path),
+            **file_metadata(original_input),
+            "normalized_table": str(input_path) if input_path != original_input else None,
+            "input_format": "xlsx" if workbook_materialization else "csv",
+            "workbook_sheets": workbook_materialization.sheets if workbook_materialization else None,
+            "workbook_cache_hit": workbook_materialization.cache_hit if workbook_materialization else None,
             "delimiter": layout.delimiter,
             "columns_total": len(layout.columns),
             "columns_first_pass": list(dict.fromkeys([*identity_columns, *dimension_columns, *[str(m.get('source_name') or m['name']) for m in present_metrics]])),
@@ -231,7 +246,8 @@ def analyze(args: argparse.Namespace) -> dict:
         out / "run_manifest.json",
         {
             "command_profile": args.profile,
-            "input": file_metadata(input_path),
+            "input": file_metadata(original_input),
+            "normalized_table": str(input_path) if input_path != original_input else None,
             "metric_policy": metric_policy,
             "artifacts": ["summary.json", "patterns.json", "material_impacts.csv", "agent_context.md"],
             "timings": timer.timings,
@@ -241,7 +257,7 @@ def analyze(args: argparse.Namespace) -> dict:
 
 
 def parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Reduce a huge result-comparison CSV into compact deterministic evidence.")
+    p = argparse.ArgumentParser(description="Reduce a huge CCR result-comparison CSV/XLSX workbook into compact deterministic evidence.")
     p.add_argument("--profile", default="cvar", help="Built-in profile name (cvar/gcvar) or YAML path")
     p.add_argument("--input", required=True)
     p.add_argument("--output", required=True)

@@ -1,6 +1,6 @@
 schema_version: 1
 id: prepare-ccr-release-evidence
-version: 0.2.0
+version: 0.4.0
 title: Prepare CCR Release Evidence
 category: quant
 subcategory: workflow-preparation
@@ -9,9 +9,22 @@ status: reviewed
 verification:
   level: reviewed
   reviewed_by: SkillHub maintainers
-  last_reviewed: "2026-09-30"
-tags: [ccr, release, cvar, gcvar, backtesting, workflow, evidence, pr-forensics]
-aliases: [prepare ccr release, validate ccr release data, ccr release evidence]
+  last_reviewed: '2026-09-30'
+tags:
+- ccr
+- release
+- cvar
+- gcvar
+- backtesting
+- xlsx
+- errors
+- workflow
+- evidence
+- pr-forensics
+aliases:
+- prepare ccr release
+- validate ccr release data
+- ccr release evidence
 executable: true
 runtime:
   python: '>=3.10'
@@ -26,17 +39,27 @@ compatibility:
   microsoft-copilot: compact-export
 dependencies:
   commands: []
-  python: []
+  python:
+  - openpyxl>=3.1,<4
   skills:
-    - analyze-large-result-diff
-    - backtesting-drilldown
+  - analyze-large-result-diff
+  - backtesting-drilldown
+  - analyze-ccr-errors
+  - release-pr-forensics
 recommended_dependencies:
   python:
-    - polars>=1.34,<2
+  - polars>=1.34,<2
   commands:
-    - gh
+  - gh
 examples:
-  - title: Prepare CVAR and GCVAR evidence
-    command: skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --cvar-backtesting cvar-bt.csv --gcvar gcvar.csv --gcvar-backtesting gcvar-bt.csv --prod-ref release/26.9 --candidate-ref release/26.10 --output out/ccr-release
-  - title: Prepare evidence and prefetch candidate PRs
-    command: skillhub run prepare-ccr-release-evidence -- --cvar cvar.csv --gcvar gcvar.csv --prod-ref release/26.9 --candidate-ref release/26.10 --repo OWNER/REPO --with-prs --output out/ccr-release
+- title: Full CCR release evidence
+  command: skillhub run prepare-ccr-release-evidence -- --cvar CcrMetrics.xlsx --cvar-backtesting
+    CvarBacktesting.xlsx --cvar-errors CvarErrorByTrade.xlsx --cvar-backtesting-errors
+    CvarBacktestingErrorByTrade.xlsx --gcvar CcrMetrics_Gcvar.xlsx --gcvar-backtesting
+    GcvarBacktesting.xlsx --gcvar-errors GcvarErrorByTrade.xlsx --gcvar-backtesting-errors
+    GcvarBacktestingErrorByTrade.xlsx --prod-ref release/26.9 --candidate-ref release/26.10
+    --output out/ccr-release
+- title: Full CCR release evidence plus PRs
+  command: skillhub run prepare-ccr-release-evidence -- --cvar CcrMetrics.xlsx --gcvar
+    CcrMetrics_Gcvar.xlsx --prod-ref release/26.9 --candidate-ref release/26.10 --repo
+    OWNER/REPO --with-prs --output out/ccr-release

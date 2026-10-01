@@ -5,19 +5,25 @@ Agents are specialized AI workers that compose reusable SkillHub skills.
 
 <div class="collection-grid"><article class="collection-card">
 <h3><a href="ccr-cvar-release-validator/">🤖 ccr-cvar-release-validator</a></h3>
-<p>Specialized CCR agent that validates the CVAR side of a candidate release by reducing the large CVAR comparison, selecting the largest material MTF00/EEPE impacts, detecting patterns across Ref/Test columns and business dimensions, then drilling only impacted Legal Entities into backtesting deal evidence.</p>
+<p>Specialized CCR agent that validates the CVAR side of a candidate release from CcrMetrics.xlsx, backtesting workbooks and ErrorByTrade workbooks. It investigates MTF00 first, then EEPE, and returns compact evidence for root-cause synthesis.</p>
 <div class="collection-meta">Personal Copilot agent</div>
 <a href="ccr-cvar-release-validator/">Open agent →</a>
 </article>
 <article class="collection-card">
 <h3><a href="ccr-gcvar-release-validator/">🤖 ccr-gcvar-release-validator</a></h3>
-<p>Specialized CCR agent that validates the GCVAR side of a candidate release using the same real compare-file schema and materiality policy as CVAR, then drills impacted Legal Entities into backtesting deal evidence.</p>
+<p>Specialized CCR agent that validates GCVAR after first checking whether the same signature already exists in CVAR, avoiding redundant expensive backtesting/error analysis when the issue is clearly mirrored.</p>
 <div class="collection-meta">Personal Copilot agent</div>
 <a href="ccr-gcvar-release-validator/">Open agent →</a>
 </article>
 <article class="collection-card">
 <h3><a href="ccr-release-validation-synthesizer/">🤖 ccr-release-validation-synthesizer</a></h3>
-<p>CCR workflow synthesis/root-cause agent that combines compact CVAR and GCVAR validator evidence, identifies shared/isolated release impacts, invokes reusable PR forensics when justified, and produces an evidence-backed release-validation investigation brief.</p>
+<p>Root-cause and release-validation agent that combines CVAR/GCVAR compact evidence, ErrorByTrade asymmetries and reusable PR forensics to explain material release impacts and classify each issue as expected dev change, suspected bug or inconclusive.</p>
 <div class="collection-meta">Personal Copilot agent</div>
 <a href="ccr-release-validation-synthesizer/">Open agent →</a>
+</article>
+<article class="collection-card">
+<h3><a href="ccr-release-validator/">🤖 ccr-release-validator</a></h3>
+<p>Top-level CCR release-validation coordinator for use today in GitHub Copilot. Starting from local CVAR/GCVAR result, backtesting and ErrorByTrade workbook paths, it runs the deterministic evidence pipeline, reasons MTF00-first then EEPE, reuses CVAR evidence for mirrored GCVAR issues, invokes generic PR forensics when available, and produces an evidence-calibrated release-impact report.</p>
+<div class="collection-meta">Personal Copilot agent</div>
+<a href="ccr-release-validator/">Open agent →</a>
 </article></div>

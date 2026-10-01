@@ -1,46 +1,75 @@
 ---
 name: analyze-large-result-diff
-description: Reduce a very large CVAR, GCVAR, risk, or regression comparison CSV into compact evidence by scanning only required gap/key columns first, selecting material impacts by threshold and Pareto coverage, enriching only selected rows, and returning patterns instead of raw data to the LLM.
+description: Reduce a very large three-sheet CCR result workbook (CVAR/GCVAR) or compatible CSV into compact evidence by normalizing Details, Non Ref and Non Test, selecting material MTF00/EEPE impacts by strict threshold and Pareto coverage, enriching only selected impacts, and keeping raw rows out of LLM context.
 ---
 
 # Analyze Large Result Diff
 
-Use this skill whenever an agent receives a huge comparison CSV and must find only the material changes without placing the raw file in model context.
+Use this skill whenever an agent must understand a large CVAR/GCVAR comparison without asking the LLM to read `CcrMetrics.xlsx` / `CcrMetrics_Gcvar.xlsx` directly.
 
 ## Core rule
 
-**Never ask the LLM to read the raw CSV.** Run this deterministic analyzer and reason over `summary.json` / `agent_context.md`.
+**The workbook is a deterministic-tool input, never normal LLM context.** The tool emits `summary.json` and `agent_context.md`; agents reason over those compact artifacts.
 
-## Real CCR compare-file defaults
+## CCR workbook contract
 
-The CVAR and GCVAR profiles understand both compact and real exported headers, including:
+The production compare workbooks are Excel files with three semantic sheets:
 
-- `Mtf00 Gap` / `Mtf00Gap` / `mtf00Gap` → canonical evidence metric `Mtf00Gap`;
-- `EepeInEur Gap` / `EepeInEurGap` → canonical evidence metric `EepeInEurGap`;
+- `Details` — aggregation levels present in both Ref/production and Test/candidate;
+- `Non Ref` — present only in Test/candidate;
+- `Non Test` — present only in Ref/production.
+
+The tool streams all three sheets into one cached normalized table. It adds:
+
+- `WorkbookSheet`;
+- `PresenceState = matched | test_only | ref_only`;
+- `IsStructuralChange`.
+
+For side-only rows, when an explicit gap is absent, the tool derives a signed structural gap:
+
+- Test-only / `Non Ref` => `+Test` value;
+- Ref-only / `Non Test` => `-Ref` value.
+
+This means additions/removals participate in materiality and Pareto coverage rather than disappearing from analysis.
+
+CSV remains supported for backward compatibility and testing, but XLSX is the primary CCR input.
+
+## Real CCR defaults
+
+The CVAR and GCVAR profiles resolve real compare headers such as:
+
 - `LegalEntity`;
 - `AggregationLevel`;
-- Ref/Test pairs such as `EffectiveMaturity (Ref)` and `EffectiveMaturity (Test)`;
-- compare-result flags such as `Currency (Result)` and `CashFlowType (Result)`.
+- `Mtf00 (Ref)` / `Mtf00 (Test)` / `Mtf00 Gap`;
+- `EepeInEur (Ref)` / `EepeInEur (Test)` / `EepeInEur Gap`;
+- `Eepe`, `Rwa`, ratios, `EffectiveMaturity`, `RiskWeightedExposureFactor`;
+- `(Result)` flags such as currency/cash-flow comparisons.
 
-Default CCR materiality is **strict `abs(gap) > 10,000`**. A value exactly equal to 10,000 is not a material gap.
+Primary materiality is deliberately narrow:
 
-After thresholding, the default selector keeps the smallest set of the largest rows required to explain **90% of absolute material movement per metric**. Override that to 80%, for example, with `--coverage 0.8`.
+- strict `abs(Mtf00 Gap) > 10,000` in the row currency;
+- strict `abs(EepeInEur Gap) > 10,000 EUR`.
 
-CVAR and GCVAR use the same generic implementation; only profiles/configuration differ.
+Exactly `10,000` is **not** material.
 
-### Currency-aware MTF00 coverage
+After thresholding, the default selector keeps the smallest set of the largest contributors required to explain **90% of absolute material movement**. Use `--coverage 0.8` for 80%.
 
-`Mtf00 Gap` is in the row currency (`Currency (Test)` / `Currency (Ref)`). A 10k EUR gap and a 10k USD gap are both material, but their raw amounts are **not additive**. When multiple currencies occur, the analyzer computes 80/90% Pareto coverage independently per currency and unions the selected rows. It deliberately suppresses fake cross-currency HHI/top-share/net-gross statistics.
+### Currency-aware MTF00
 
-`EepeInEur Gap` is already EUR-denominated, so its coverage is computed globally.
+`Mtf00 Gap` is native-currency. EUR and USD values must never be added into a fake common total. Pareto coverage and concentration are computed independently per observed currency and the selected rows are unioned.
+
+`EepeInEur Gap` is EUR-normalized and can be analyzed globally.
 
 ## Run
+
+CVAR:
 
 ```powershell
 skillhub run analyze-large-result-diff -- `
   --profile cvar `
-  --input <cvar-comparison.csv> `
-  --output <analysis-dir>
+  --input "C:\jobs\CcrMetrics.xlsx" `
+  --coverage 0.90 `
+  --output "C:\work\release\cvar"
 ```
 
 GCVAR:
@@ -48,8 +77,9 @@ GCVAR:
 ```powershell
 skillhub run analyze-large-result-diff -- `
   --profile gcvar `
-  --input <gcvar-comparison.csv> `
-  --output <analysis-dir>
+  --input "C:\jobs\CcrMetrics_Gcvar.xlsx" `
+  --coverage 0.90 `
+  --output "C:\work\release\gcvar"
 ```
 
 Optional policy overrides:
@@ -60,36 +90,39 @@ Optional policy overrides:
 --threshold "EepeInEur Gap=25000"
 ```
 
-For maximum throughput install Polars (`pip install -e ".[fastcsv]"`). A bounded-memory Python streaming fallback remains available on locked-down machines.
+For the high-throughput normalized-table scan install the CCR extra (`pip install -e ".[ccr]"`), which enables Polars. Excel ingestion itself uses `openpyxl` in read-only mode and is cached, so repeated investigations avoid re-reading the workbook.
 
 ## Algorithm
 
-1. Inspect only the CSV header.
-2. Resolve canonical metrics to actual file headers/aliases.
-3. First pass: project identifiers/dimensions plus the two gap columns only.
-4. Apply strict materiality (`|gap| > threshold`).
-5. Track total absolute material movement per metric.
-6. Keep bounded top candidates and retain only the largest rows required for the configured impact-coverage target.
-7. Second pass: enrich only those selected rows with the other compare columns.
-8. Detect patterns by both row frequency **and absolute impact contribution**.
-9. Compute concentration diagnostics: top-1/top-3/top-10 shares, HHI/effective contributor count, net-vs-gross cancellation, and contributor counts required for 50/80/90/95% of material movement.
-10. Summarize secondary compare diagnostics (RWA gap/ratio, EEPE gap/ratio, MTF/EEPE ratios) only on selected rows.
-11. Compare Ref/Test field pairs on the selected rows to expose clues such as maturity/model/input changes.
-12. Summarize `(Result)` comparison-flag failures and relationships between MTF00 and EEPE gaps.
-13. Emit small structured evidence plus an LLM-ready Markdown brief.
+1. Validate the three-sheet workbook contract.
+2. Stream `Details`, `Non Ref`, and `Non Test` once into a cached normalized table.
+3. Preserve structural side-only rows and derive missing signed gaps.
+4. Resolve canonical metrics and real header aliases.
+5. First analytical pass: project only identifiers/dimensions plus material gap columns.
+6. Apply strict `|gap| > threshold`.
+7. Measure total/gross/net/positive/negative material movement.
+8. Select the largest contributors required for the configured Pareto coverage.
+9. Compute top-1/top-3/top-10 shares, HHI/effective contributor count, cancellation, and contributor counts for 50/80/90/95% coverage.
+10. Second analytical pass: enrich only selected rows with Ref/Test/Result/ratio/RWA/maturity diagnostics.
+11. Detect Legal Entity, aggregation-shape, structural-sheet and Ref/Test-change patterns by frequency and impact contribution.
+12. Emit compact structured evidence plus an LLM-ready Markdown brief.
+
+The tool computes MTF00 and EEPE evidence in the same efficient scan, but the **agent reasoning order is MTF00 first, then EEPE**.
 
 ## Outputs
 
 - `summary.json` — canonical SkillHub evidence contract;
-- `material_impacts.csv` — selected material metric impacts only;
-- `patterns.json` — business concentration, Ref/Test changes, result-flag failures and metric relationships;
-- `agent_context.md` — deliberately small context for an LLM;
-- `run_manifest.json` — source metadata, policy and timings.
+- `material_impacts.csv` — only selected material contributors;
+- `patterns.json` — concentration, structural rows, Ref/Test changes and result-flag clues;
+- `agent_context.md` — deliberately compact LLM context;
+- `run_manifest.json` — source/workbook/cache metadata and timings.
 
 ## Interpretation rules
 
-- Positive and negative impacts are both important; absolute size controls selection.
-- MTF00 and EEPE are never summed together as if they shared units.
-- A Legal Entity can be important through contribution even if it appears in only a few rows.
+- Positive and negative impacts both matter; absolute size controls contributor selection.
+- MTF00 and EEPE are never summed together.
+- MTF00 amounts from different native currencies are never summed together.
+- `Non Ref` / `Non Test` are first-class structural changes, not noise.
+- A Legal Entity can be important through contribution even if it occurs in few rows.
 - Ref/Test changes are clues, not proof of root cause.
-- Threshold and 80/90% coverage are configuration, so release policy can evolve without changing code.
+- EEPE overlap with MTF00 is a routing clue only: other MTFs are not visible in this result workbook.

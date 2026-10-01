@@ -358,3 +358,69 @@ def test_percentage_formatted_numeric_diagnostics_are_parsed():
     )
     assert result[0]["valid"] == 2
     assert result[0]["max_abs"] == 0.005
+
+
+def _write_three_sheet_workbook(path, details, non_ref, non_test):
+    from openpyxl import Workbook
+    wb = Workbook()
+    wb.remove(wb.active)
+    for name, rows in [("Details", details), ("Non Ref", non_ref), ("Non Test", non_test)]:
+        ws = wb.create_sheet(name)
+        for row in rows:
+            ws.append(row)
+    wb.save(path)
+
+
+def test_xlsx_three_sheet_result_semantics_and_side_only_gaps(tmp_path):
+    import os, subprocess, sys, json
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[1]
+    wb = tmp_path / "CcrMetrics.xlsx"
+    header = ["LegalEntity","AggregationLevel","Currency (Ref)","Currency (Test)","Mtf00 (Ref)","Mtf00 (Test)","EepeInEur (Ref)","EepeInEur (Test)","Mtf00 Gap","EepeInEur Gap"]
+    _write_three_sheet_workbook(
+        wb,
+        [header, ["LE1","/LegalEntity:LE1/Master:1","EUR","EUR",1000,25000,5000,30000,24000,25000]],
+        [header, ["LE2","/LegalEntity:LE2/Master:2","","USD","",50000,"",75000,"",""]],
+        [header, ["LE3","/LegalEntity:LE3/Master:3","EUR","",40000,"",60000,"","",""]],
+    )
+    out = tmp_path / "out-xlsx"
+    subprocess.run([
+        sys.executable, str(repo / "skills/analyze-large-result-diff/scripts/analyze.py"),
+        "--profile","cvar","--input",str(wb),"--output",str(out),"--backend","streaming"
+    ], cwd=repo, env={**os.environ,"PYTHONPATH":str(repo)}, check=True, capture_output=True, text=True)
+    evidence=json.loads((out/"summary.json").read_text())
+    assert evidence["source"]["input_format"] == "xlsx"
+    assert evidence["source"]["workbook_sheets"] == {"Details":1,"Non Ref":1,"Non Test":1}
+    states=set(evidence["impacted_dimensions"].get("PresenceState", []))
+    assert {"matched","test_only","ref_only"}.issubset(states)
+    impacts=evidence["material_impacts"]
+    vals={(r["metric"], r["identity"].get("AggregationLevel")): r["value"] for r in impacts}
+    assert vals[("Mtf00Gap","/LegalEntity:LE2/Master:2")] == 50000
+    assert vals[("Mtf00Gap","/LegalEntity:LE3/Master:3")] == -40000
+    assert vals[("EepeInEurGap","/LegalEntity:LE2/Master:2")] == 75000
+    assert vals[("EepeInEurGap","/LegalEntity:LE3/Master:3")] == -60000
+
+
+def test_xlsx_backtesting_derives_deals_and_deal_families(tmp_path):
+    import os, subprocess, sys, json
+    from pathlib import Path
+    repo = Path(__file__).resolve().parents[1]
+    upstream=tmp_path/"up.json"
+    upstream.write_text(json.dumps({
+        "schema_version":"1.0","evidence_type":"large-result-diff","source":{},"summary":{},"material_impacts":[],"patterns":[],
+        "impacted_dimensions":{"LegalEntity":["LE1"]},"timings":[],"warnings":[]
+    }), encoding="utf-8")
+    wb=tmp_path/"Backtesting.xlsx"
+    header=["LegalEntity","AggregationLevel","Currency (Test)","Mtf00 Gap","EepeInEur Gap"]
+    _write_three_sheet_workbook(
+        wb,
+        [header,["LE1","/LegalEntity:LE1/TRD:ELI-123","EUR",50000,70000],["LE1","/LegalEntity:LE1/TRD:123456","EUR",30000,40000],["LE1","/LegalEntity:LE1/TRD:IRD-9","EUR",20000,30000]],
+        [header], [header]
+    )
+    out=tmp_path/"bt"
+    subprocess.run([sys.executable,str(repo/"skills/backtesting-drilldown/scripts/drilldown.py"),"--input",str(wb),"--evidence",str(upstream),"--output",str(out),"--backend","streaming"],cwd=repo,env={**os.environ,"PYTHONPATH":str(repo)},check=True,capture_output=True,text=True)
+    evidence=json.loads((out/"backtesting_summary.json").read_text())
+    families={(r["metric"],r["deal_family"]):r["selected_deals"] for r in evidence["deal_family_patterns"]}
+    assert families[("Mtf00Gap","equity")] >= 1
+    assert families[("Mtf00Gap","equity_dps")] >= 1
+    assert families[("Mtf00Gap","fic")] >= 1

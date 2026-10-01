@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0 — 2026-10-01
+
+- Rebuilt the workflow for real XLSX result/backtesting workbooks and matching three-sheet `ErrorByTrade.xlsx` inputs.
+- Encoded CVAR MTF00-first → deal attribution → error correlation → EEPE-second reasoning.
+- Added GCVAR-vs-CVAR signature gating to avoid redundant expensive GCVAR deep scans.
+- Added compact root-cause routing, deal-family/error-category PR hints, and `expected_dev_change` / `suspected_bug` / `inconclusive` synthesis contract.
+
 ## 0.2.0 — 2026-09-30
 
 - Added one-command CVAR + GCVAR + targeted backtesting workspace preparation using the calibrated real compare schema.

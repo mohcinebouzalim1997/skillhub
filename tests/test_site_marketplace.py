@@ -29,7 +29,7 @@ def test_mkdocs_config_and_generated_marketplace_links():
     assert "search" in [p if isinstance(p, str) else next(iter(p)) for p in cfg["plugins"]]
 
     data = prepare_site_sources(ROOT)
-    assert len(data["skills"]) == 6
+    assert len(data["skills"]) == 7
     assert "Copy install" in (DOCS / "marketplace" / "index.md").read_text(encoding="utf-8")
 
     for source in [DOCS / "index.md", DOCS / "marketplace" / "index.md"]:

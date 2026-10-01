@@ -6,7 +6,7 @@ Curated ways to browse capabilities by job-to-be-done.
 <div class="collection-grid"><article class="collection-card">
 <h3><a href="ccr-release-validation/">CCR Release Validation</a></h3>
 <p>Skills used to reduce huge CCR comparison outputs, drill impacts to deals, and correlate validated regressions with release code changes.</p>
-<div class="collection-meta">4 capabilities · Prepare CCR Release Evidence, Analyze Large Result Diff, Backtesting Drilldown</div>
+<div class="collection-meta">5 capabilities · Prepare CCR Release Evidence, Analyze Large Result Diff, Backtesting Drilldown</div>
 <a href="ccr-release-validation/">Explore collection →</a>
 </article>
 <article class="collection-card">

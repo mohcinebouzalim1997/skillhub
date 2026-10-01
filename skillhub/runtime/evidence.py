@@ -47,12 +47,22 @@ def compact_agent_markdown(payload: dict[str, Any], *, max_impacts: int = 30, ma
     lines = [
         f"# {payload.get('title') or payload.get('evidence_type', 'Evidence')}",
         "",
-        "This is a compact deterministic evidence report. The raw source CSV is intentionally not embedded.",
+        "This is a compact deterministic evidence report. The raw source CSV/XLSX is intentionally not embedded.",
         "",
         "## Summary",
     ]
     for key, value in summary.items():
         lines.append(f"- **{key}**: {value}")
+
+
+    source = payload.get("source") or {}
+    workbook_sheets = source.get("workbook_sheets")
+    if workbook_sheets:
+        lines.extend(["", "## Workbook structure"] )
+        for sheet, count in workbook_sheets.items():
+            lines.append(f"- **{sheet}**: {count} data rows")
+        if source.get("workbook_cache_hit") is not None:
+            lines.append(f"- Normalized workbook cache hit: {source.get('workbook_cache_hit')}")
 
     metric_stats = payload.get("metric_statistics") or {}
     concentration = payload.get("concentration") or {}
@@ -195,6 +205,24 @@ def compact_agent_markdown(payload: dict[str, Any], *, max_impacts: int = 30, ma
                 f"rows={row.get('rows_with_both')}, both material={row.get('both_over_materiality_threshold')}, "
                 f"same sign={row.get('same_sign_pct')}%, Pearson={row.get('pearson_correlation')}"
             )
+
+    deal_families = payload.get("deal_family_patterns") or []
+    if deal_families:
+        lines.extend(["", "## Deal-family patterns"] )
+        for row in deal_families[:12]:
+            lines.append(
+                f"- **{row.get('metric')} · {row.get('deal_family')}**: "
+                f"selected deals={row.get('selected_deals')}, absolute share={row.get('selected_abs_share_pct')}%"
+            )
+
+    relation = payload.get("mtf00_eepe_relationship") or {}
+    if relation:
+        lines.extend(["", "## MTF00 ↔ EEPE routing"] )
+        lines.append(f"- Classification: **{relation.get('classification')}**")
+        lines.append(f"- EEPE absolute share on MTF00-selected rows: {relation.get('eepe_abs_share_on_mtf00_selected_rows_pct')}%")
+        if relation.get('eepe_abs_share_on_mtf00_selected_deals_pct') is not None:
+            lines.append(f"- EEPE absolute share on MTF00-selected deals: {relation.get('eepe_abs_share_on_mtf00_selected_deals_pct')}%")
+        lines.append(f"- {relation.get('interpretation_rule')}")
 
     dims = payload.get("impacted_dimensions") or {}
     if dims:

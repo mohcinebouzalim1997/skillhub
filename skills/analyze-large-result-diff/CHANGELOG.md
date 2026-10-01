@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 — 2026-10-01
+
+- Switched the primary CCR contract from flat CSV assumptions to three-sheet XLSX result workbooks (`Details`, `Non Ref`, `Non Test`).
+- Added read-only XLSX normalization/cache with structural Test-only/Ref-only signed gap derivation.
+- Preserved the compact evidence contract so agents never need raw workbook rows.
+- Kept CSV compatibility for generic/legacy use while documenting XLSX as the production CCR path.
+
 ## 0.3.0 — 2026-09-30
 
 - Added native-currency-aware MTF00 Pareto selection: EUR/USD (and any other observed currency) are covered independently rather than summed.

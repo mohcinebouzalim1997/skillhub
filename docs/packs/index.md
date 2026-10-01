@@ -18,6 +18,7 @@ Reusable skills required by the multi-agent CCR release-validation workflow.
 - [prepare-ccr-release-evidence](../marketplace/skills/prepare-ccr-release-evidence/)
 - [analyze-large-result-diff](../marketplace/skills/analyze-large-result-diff/)
 - [backtesting-drilldown](../marketplace/skills/backtesting-drilldown/)
+- [analyze-ccr-errors](../marketplace/skills/analyze-ccr-errors/)
 - [release-pr-forensics](../marketplace/skills/release-pr-forensics/)
 </section>
 

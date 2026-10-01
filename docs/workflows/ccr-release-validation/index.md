@@ -3,36 +3,35 @@
 
 **Status:** `usable-today-explicit-orchestrated-handoff` · **Owner:** `ccr-quant`
 
-Multi-agent workflow for validating a candidate CCR release against production using CVAR and GCVAR compare-job evidence, targeted deal-level backtesting, and reusable PR/code forensics when material impacts require explanation.
+Multi-agent validation of a candidate CCR release using XLSX-aware CVAR/GCVAR result comparisons, deal-level backtesting, ErrorByTrade asymmetry analysis, and reusable PR/code forensics.
 
 ## Specialized agents
 
-- [🤖 `ccr-cvar-release-validator`](../../agents/ccr-cvar-release-validator/) — Reduce CVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.
-- [🤖 `ccr-gcvar-release-validator`](../../agents/ccr-gcvar-release-validator/) — Reduce GCVAR compare output, detect material impacts/patterns, and drill impacted Legal Entities into backtesting deals.
-- [🤖 `ccr-release-validation-synthesizer`](../../agents/ccr-release-validation-synthesizer/) — Combine compact validator evidence, explain shared/isolated patterns, and use reusable PR forensics when code-level investigation is justified.
+- [🤖 `ccr-release-validator`](../../agents/ccr-release-validator/) — Today-facing coordinator: runs deterministic preparation from workbook paths and follows the multi-agent workflow contract.
+- [🤖 `ccr-cvar-release-validator`](../../agents/ccr-cvar-release-validator/) — Investigate CVAR MTF00 first, then EEPE, including deal attribution and errors.
+- [🤖 `ccr-gcvar-release-validator`](../../agents/ccr-gcvar-release-validator/) — First test whether GCVAR mirrors CVAR; deep-dive only when needed.
+- [🤖 `ccr-release-validation-synthesizer`](../../agents/ccr-release-validation-synthesizer/) — Correlate data/errors/code, identify candidate PRs, and classify expected change vs suspected bug vs inconclusive.
 
 ## Reusable skills
 
 - [prepare-ccr-release-evidence](../../marketplace/skills/prepare-ccr-release-evidence/)
 - [analyze-large-result-diff](../../marketplace/skills/analyze-large-result-diff/)
 - [backtesting-drilldown](../../marketplace/skills/backtesting-drilldown/)
+- [analyze-ccr-errors](../../marketplace/skills/analyze-ccr-errors/)
 - [release-pr-forensics](../../marketplace/skills/release-pr-forensics/)
 
 ## Execution flow
 
-1. **evidence-preparation** — agent `` → produces `[&#x27;workflow_context.md&#x27;, &#x27;workflow_manifest.json&#x27;, &#x27;pr_forensics_hints.json&#x27;]`
-2. **cvar-validation** — agent `ccr-cvar-release-validator` → produces `[&#x27;cvar/summary.json&#x27;, &#x27;cvar/agent_context.md&#x27;, &#x27;cvar-backtesting/backtesting_summary.json&#x27;, &#x27;cvar-backtesting/agent_context.md&#x27;]`
-3. **gcvar-validation** — agent `ccr-gcvar-release-validator` → produces `[&#x27;gcvar/summary.json&#x27;, &#x27;gcvar/agent_context.md&#x27;, &#x27;gcvar-backtesting/backtesting_summary.json&#x27;, &#x27;gcvar-backtesting/agent_context.md&#x27;]`
-4. **synthesis-root-cause** — agent `ccr-release-validation-synthesizer` → produces `[&#x27;ccr-release-validation-report&#x27;]`
+1. **prepare-cvar** — agent `ccr-cvar-release-validator`
+2. **gcvar-precheck** — agent `ccr-gcvar-release-validator`
+3. **synthesis** — agent `ccr-release-validation-synthesizer`
 
 ## Inputs
 
-**Required:** `production_ref`, `candidate_ref`, `cvar_comparison_csv`, `gcvar_comparison_csv`
+**Required:** `production_ref`, `candidate_ref`, `cvar_result_workbook`
 
-**Optional:** `coverage_target`, `first_bad_date`, `materiality_overrides`
+**Optional:** 
 
 ## Notes
 
-- The deterministic CVAR/GCVAR/backtesting data plane is calibrated to the provided real compare-file screenshots.
-- Full production approval still benefits from a sanitized real CSV sample and one historical known regression to verify exact values, edge cases and throughput.
-- Multi-agent automatic handoff depends on the GitHub Copilot environment; the same workflow can be executed today with explicit validator then synthesizer handoff.
+- None

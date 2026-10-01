@@ -5,7 +5,7 @@ Workflows describe a job that is executed by multiple specialized agents and reu
 
 <div class="collection-grid"><article class="collection-card">
 <h3><a href="ccr-release-validation/">🔀 CCR Release Validation</a></h3>
-<p>Multi-agent workflow for validating a candidate CCR release against production using CVAR and GCVAR compare-job evidence, targeted deal-level backtesting, and reusable PR/code forensics when material impacts require explanation.</p>
-<div class="collection-meta">3 agents · 4 reusable skills · usable-today-explicit-orchestrated-handoff</div>
+<p>Multi-agent validation of a candidate CCR release using XLSX-aware CVAR/GCVAR result comparisons, deal-level backtesting, ErrorByTrade asymmetry analysis, and reusable PR/code forensics.</p>
+<div class="collection-meta">4 agents · 5 reusable skills · usable-today-explicit-orchestrated-handoff</div>
 <a href="ccr-release-validation/">Open workflow →</a>
 </article></div>

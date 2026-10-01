@@ -1,18 +1,35 @@
 # Quant SkillHub
 
-**Quant SkillHub is an internal Play Store for reusable AI capabilities used by Quant and engineering teams.** It centralizes skills, executable tools, agents, workflows, packs, stacks and knowledge without adding SkillHub files to production repositories.
+**Quant SkillHub is an internal Play Store for reusable AI capabilities used by Quant and engineering teams.** It centralizes skills, executable tools, agents, workflows, packs and stacks without adding SkillHub files to production repositories.
 
-The flagship prepared workflow is now **CCR Release Validation**: specialized CVAR and GCVAR validator agents reduce huge comparison CSVs into compact deterministic evidence, drill only impacted dimensions into backtesting data, and reuse the generic `release-pr-forensics` skill when a release impact requires code-change investigation.
+The flagship workflow is **CCR Release Validation**.
 
-> `release-pr-forensics` is a reusable skill/tool — not a dedicated agent.
+It now understands the real workbook model:
 
-## Start here
+```text
+CcrMetrics.xlsx
+CcrMetrics_Gcvar.xlsx
+Backtesting result workbooks
+ErrorByTrade.xlsx
+```
 
-The detailed architecture, terminology, CCR flow and production-completion checklist live in:
+with the three compare sheets:
 
-**[`docs/project/PROJECT-GUIDE.md`](docs/project/PROJECT-GUIDE.md)**
+```text
+Details
+Non Ref
+Non Test
+```
 
-For the exact operational commands, use **[`docs/project/CCR-RELEASE-VALIDATION-RUNBOOK.md`](docs/project/CCR-RELEASE-VALIDATION-RUNBOOK.md)**.
+The system reduces these large workbooks deterministically and gives GitHub Copilot only compact evidence.
+
+> `release-pr-forensics` remains a reusable skill/tool, not a dedicated CCR agent.
+
+## Read first
+
+- [Project Guide](docs/project/PROJECT-GUIDE.md)
+- [CCR Release Validation design](docs/project/CCR-RELEASE-VALIDATION.md)
+- [CCR operator runbook](docs/project/CCR-RELEASE-VALIDATION-RUNBOOK.md)
 
 ## Setup
 
@@ -22,120 +39,137 @@ skillhub doctor
 skillhub validate
 ```
 
-For the fastest huge-CSV analysis path:
+For the recommended large-file path:
 
 ```powershell
-pip install -e ".[fastcsv]"
+pip install -e ".[ccr]"
 ```
 
-## Open the marketplace
+This keeps the XLSX streaming layer and enables Polars for fast scans of the normalized tables.
 
-Static documentation / GitHub Pages:
+## Marketplace
+
+Static/MkDocs mode:
 
 ```powershell
 skillhub serve-site
 ```
 
-Local Play-Store control mode with Installed / Update status:
+Local Play-Store control mode:
 
 ```powershell
 skillhub marketplace --open
 ```
 
-## Install the CCR release-validation terrain
+## Install CCR Release Validation
 
 ```powershell
 skillhub install-stack ccr-release-validation --check-deps
 ```
 
-This installs these reusable skills:
+Reusable skills include:
 
-- `prepare-ccr-release-evidence`
-- `analyze-large-result-diff`
-- `backtesting-drilldown`
-- `release-pr-forensics`
+```text
+prepare-ccr-release-evidence
+analyze-large-result-diff
+backtesting-drilldown
+analyze-ccr-errors
+release-pr-forensics
+```
 
-and these specialized agents:
+Agents:
 
-- `ccr-cvar-release-validator`
-- `ccr-gcvar-release-validator`
-- `ccr-release-validation-synthesizer`
+```text
+ccr-release-validator                 # recommended entry point today
+ccr-cvar-release-validator            # specialized CVAR reasoning
+ccr-gcvar-release-validator           # specialized GCVAR reasoning
+ccr-release-validation-synthesizer    # root-cause / code synthesis
+```
 
-The declarative multi-agent workflow is `workflows/ccr-release-validation.yaml`.
+The coordinator can start from local workbook paths, run the deterministic preparation command through Copilot's terminal, and then reason only over the compact workspace. The specialized agents remain independently usable and are future delegation targets when the enterprise agent platform supports multi-agent orchestration.
 
-
-## Fastest way to prepare one CCR release today
-
-Give the tools **file paths**, not pasted raw CSV content:
+## Full workflow today
 
 ```powershell
 skillhub run prepare-ccr-release-evidence -- `
-  --cvar "C:\jobs\cvar-compare.csv" `
-  --cvar-backtesting "C:\jobs\cvar-backtesting.csv" `
-  --gcvar "C:\jobs\gcvar-compare.csv" `
-  --gcvar-backtesting "C:\jobs\gcvar-backtesting.csv" `
+  --cvar "C:\jobs\CcrMetrics.xlsx" `
+  --cvar-backtesting "C:\jobs\CvarBacktesting.xlsx" `
+  --cvar-errors "C:\jobs\CvarErrorByTrade.xlsx" `
+  --cvar-backtesting-errors "C:\jobs\CvarBacktestingErrorByTrade.xlsx" `
+  --gcvar "C:\jobs\CcrMetrics_Gcvar.xlsx" `
+  --gcvar-backtesting "C:\jobs\GcvarBacktesting.xlsx" `
+  --gcvar-errors "C:\jobs\GcvarErrorByTrade.xlsx" `
+  --gcvar-backtesting-errors "C:\jobs\GcvarBacktestingErrorByTrade.xlsx" `
   --prod-ref release/26.9 `
   --candidate-ref release/26.10 `
   --coverage 0.90 `
-  --output "C:\work\ccr-26.10"
+  --repo OWNER/REPO `
+  --with-prs `
+  --output "C:\work\ccr-release-26.10"
 ```
 
-Then give Copilot the generated `workflow_context.md` (or simply tell the installed CCR agents to use that workspace). Add `--repo OWNER/REPO --with-prs` when `gh auth status` is healthy and you want candidate PRs prefetched.
-
-`Mtf00 Gap` is treated as native-currency: materiality is 10k in the row currency, and Pareto coverage is calculated independently by currency rather than adding EUR and USD amounts. `EepeInEur Gap` remains globally EUR-denominated.
-
-## Release naming convention
-
-Single-digit release components are **not zero padded**:
+The first file Copilot should read is:
 
 ```text
-release/26.8
+workflow_context.md
+```
+
+not the raw Excel files.
+
+## Investigation logic
+
+```text
+CVAR MTF00
+  -> backtesting deals
+  -> deal-family pattern
+  -> errors
+  -> CVAR EEPE
+  -> MTF00/EEPE overlap
+
+GCVAR
+  -> first compare result signature with CVAR
+  -> skip redundant deep work when clearly mirrored
+  -> otherwise full MTF00/EEPE/backtesting/error analysis
+
+Synthesis
+  -> data hypotheses
+  -> PR forensics
+  -> selective diffs
+  -> discriminating test
+  -> expected_dev_change / suspected_bug / inconclusive
+```
+
+Deal family convention:
+
+```text
+no explicit prefix -> Equity DPS
+ELI-               -> Equity
+other prefix       -> FIC
+```
+
+Materiality:
+
+```text
+abs(Mtf00 Gap) > 10,000 in row currency
+abs(EepeInEur Gap) > 10,000 EUR
+```
+
+Default Pareto coverage is 90% of absolute material movement.
+
+## Release naming
+
+Correct:
+
+```text
 release/26.9
 release/26.10
 ```
 
-The PR-forensics skill can therefore infer `release/26.9` as the previous sibling of `release/26.10` when both refs exist.
-
-## Huge CSV rule
-
-The LLM never reads the raw CVAR/GCVAR/backtesting CSV.
+Not:
 
 ```text
-huge CSV → deterministic reduction → compact evidence → agent reasoning
+release/26.09
 ```
-
-CVAR example:
-
-```powershell
-skillhub run analyze-large-result-diff -- `
-  --profile cvar `
-  --input cvar-compare.csv `
-  --coverage 0.90 `
-  --output cvar-evidence
-```
-
-Then backtesting:
-
-```powershell
-skillhub run backtesting-drilldown -- `
-  --input backtesting-compare.csv `
-  --evidence cvar-evidence/summary.json `
-  --output cvar-backtesting
-```
-
-## PR forensics
-
-Named release:
-
-```powershell
-skillhub run release-pr-forensics -- `
-  --repo OWNER/REPO `
-  --release release/26.10 `
-  --query "EEPE jump in MTF" `
-  --output release-analysis
-```
-
-Two refs/commits and date-window modes are also supported. Full diffs are fetched selectively rather than dumping the entire release into model context.
 
 ## Validation
 
@@ -145,8 +179,4 @@ skillhub validate
 skillhub generate-site
 ```
 
-## Current status
-
-The platform infrastructure, screenshot-calibrated CVAR/GCVAR schema, targeted TRD backtesting drilldown and one-command evidence preparation path are implemented. The data plane is usable today. **Production sign-off still needs a sanitized real CSV sample, one historical known regression and your final release verdict policy** so we can golden-test exact parsing, throughput and decision rules.
-
-Read the [Project Guide](docs/project/PROJECT-GUIDE.md) for exactly what to provide next.
+The repository contains synthetic XLSX regression tests for three-sheet result workbooks, backtesting deal extraction, ErrorByTrade asymmetry, CVAR→GCVAR reuse and the full preparation workflow. The remaining critical validation is a blind replay on one real historical release with a known eventual root cause and real workstation performance measurements.

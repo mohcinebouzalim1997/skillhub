@@ -1,5 +1,5 @@
 id: backtesting-drilldown
-version: 0.3.0
+version: 0.5.0
 title: Backtesting Drilldown
 category: quant
 subcategory: ccr-forensics
@@ -8,9 +8,22 @@ status: reviewed
 verification:
   level: reviewed
   reviewed_by: SkillHub maintainers
-  last_reviewed: "2026-09-30"
-tags: [ccr, backtesting, deal, csv, performance, regression, trd, pareto]
-aliases: [deal drilldown, backtesting impact, ccr deal contributors, trd drilldown]
+  last_reviewed: '2026-09-30'
+tags:
+- ccr
+- backtesting
+- deal
+- xlsx
+- csv
+- performance
+- regression
+- trd
+- pareto
+aliases:
+- deal drilldown
+- backtesting impact
+- ccr deal contributors
+- trd drilldown
 executable: true
 runtime:
   python: '>=3.10'
@@ -25,14 +38,14 @@ compatibility:
   microsoft-copilot: compact-export
 dependencies:
   commands: []
-  python: []
+  python:
+  - openpyxl>=3.1,<4
   skills:
-    - analyze-large-result-diff
+  - analyze-large-result-diff
 recommended_dependencies:
   python:
-    - polars>=1.34,<2
+  - polars>=1.34,<2
 examples:
-  - title: Drill CVAR impact into backtesting deals
-    command: skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis
-  - title: Use 80 percent deal coverage
-    command: skillhub run backtesting-drilldown -- --input backtesting.csv --evidence cvar-analysis/summary.json --output bt-analysis --coverage 0.8
+- title: Drill CVAR workbook impact into backtesting deals
+  command: skillhub run backtesting-drilldown -- --input Backtesting.xlsx --evidence
+    cvar-analysis/summary.json --output bt-analysis
